@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 
+function shortPriority(priority) {
+  if (String(priority).toLowerCase() === 'medium') return 'Med'
+  return priority
+}
+
 function formatWeekDue(dayOffset, hour24, minute) {
   const today = new Date()
   const weekStart = new Date(today)
@@ -352,6 +357,12 @@ function occursOnDate(item, anchorDate, targetDate) {
 function App() {
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()))
 
+  const [collapsedBuckets, setCollapsedBuckets] = useState({})
+
+  function toggleBucket(key) {
+    setCollapsedBuckets((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
   const currentDay = selectedDate.toLocaleDateString('en-US', {
     weekday: 'long',
   })
@@ -532,7 +543,7 @@ function App() {
     const buckets = [
       { key: 'Today', tasks: [] },
       { key: 'Tomorrow', tasks: [] },
-      { key: 'This week', tasks: [] },
+      { key: 'This Week', tasks: [] },
     ]
 
     searchedAndSortedTasks.forEach((task) => {
@@ -552,7 +563,7 @@ function App() {
     const buckets = [
       { key: 'Today', events: [] },
       { key: 'Tomorrow', events: [] },
-      { key: 'This week', events: [] },
+      { key: 'This Week', events: [] },
     ]
 
     filteredEvents.forEach((event) => {
@@ -713,7 +724,7 @@ function App() {
     const TRACK_WIDTH = 1440
     const scrollTarget = (timeline.currentTimePercent / 100) * TRACK_WIDTH - el.clientWidth / 2
     el.scrollLeft = Math.max(0, scrollTarget)
-  }, [timeline.currentTimePercent, selectedDate])
+  }, [timeline.currentTimePercent, selectedDate, screen])
   
   useEffect(() => {
     const el = timelineScrollRef.current
@@ -728,6 +739,7 @@ function App() {
       startX = e.clientX
       startScrollLeft = el.scrollLeft
       el.setPointerCapture(e.pointerId)
+      el.style.cursor = 'grabbing'
       e.preventDefault()
     }
   
@@ -739,6 +751,7 @@ function App() {
   
     function onPointerUp() {
       isDragging = false
+      el.style.cursor = ''
     }
   
     el.addEventListener('pointerdown', onPointerDown)
@@ -752,7 +765,7 @@ function App() {
       el.removeEventListener('pointerup', onPointerUp)
       el.removeEventListener('pointercancel', onPointerUp)
     }
-  }, [])
+  }, [screen])
 
   function shiftSelectedDate(days) {
     setSelectedDate((current) => startOfDay(addDays(current, days)))
@@ -1092,8 +1105,7 @@ function App() {
                         <div className="task-copy">
                           <div className="task-topline">
                             <h3>{task.title}</h3>
-                            <span className={`priority priority-${task.priority.toLowerCase()}`}>{task.priority}</span>
-                          </div>
+                            <span className={`priority priority-${task.priority.toLowerCase()}`}>{shortPriority(task.priority)}</span>                          </div>
                           <p>{task.notes}</p>
                           <div className="task-meta-line">{task.due}</div>
                           {getRepeatSummary(task) ? <div className="task-meta-line">{getRepeatSummary(task)}</div> : null}
@@ -1149,7 +1161,7 @@ function App() {
               <section className="task-section weekly-section">
                 <div className="section-heading">
                   <h2>Weekly View</h2>
-                  <span>{loading ? 'Loading…' : 'This week'}</span>
+                  <span>{loading ? 'Loading…' : 'This Week'}</span>
                 </div>
 
                 <div className="weekly-list">
@@ -1158,71 +1170,87 @@ function App() {
                   ) : weeklyBuckets.some((bucket) => bucket.tasks.length) ? (
                     weeklyBuckets.map((bucket) => {
                       const eventBucket = weeklyEventBuckets.find((entry) => entry.key === bucket.key)
+                      const isCollapsed = collapsedBuckets[bucket.key]
+                      const totalItems = bucket.tasks.length + (eventBucket?.events.length || 0)
                       return (
-                      <article key={bucket.key} className="weekly-card">
-                        <div className="weekly-card-head">
-                          <h3>{bucket.key}</h3>
-                          <span>{bucket.tasks.length + (eventBucket?.events.length || 0)} items</span>
-                        </div>
-                        <div className="weekly-items">
-                          {eventBucket?.events.length ? (
-                            eventBucket.events.map((event) => (
-                                <div
-                                  key={`event-${event.id}`}
-                                  className="weekly-event editable"
-                                  onClick={() => openEventEditor(event)}
-                                  role="button"
-                                  tabIndex={0}
-                                  onKeyDown={(eventKey) => {
-                                    if (eventKey.key === 'Enter' || eventKey.key === ' ') {
-                                      eventKey.preventDefault()
-                                      openEventEditor(event)
-                                    }
-                                  }}
-                                  aria-label={`Edit ${event.title}`}
-                                >
-                                  <span className="priority priority-low">Event</span>
-                                  <div>
-                                    <strong>{event.title}</strong>
-                                    <p>{formatDateForDisplay(event.date)}</p>
-                                    {getRepeatSummary(event) ? <p>{getRepeatSummary(event)}</p> : null}
-                                    <p>{formatEventTime(event)} · {event.location}</p>
+                        <article key={bucket.key} className="weekly-card">
+                          <button
+                            type="button"
+                            className="weekly-card-head"
+                            onClick={() => toggleBucket(bucket.key)}
+                            aria-expanded={!isCollapsed}
+                          >
+                            <h3>{bucket.key}</h3>
+                            <div className="weekly-card-head-right">
+                              <span>{loading ? 'Loading…' : `${totalItems} items`}</span>
+                              <span className={`weekly-chevron ${isCollapsed ? 'collapsed' : ''}`}>▾</span>
+                            </div>
+                          </button>
+                          {!isCollapsed && (
+                            <div className="weekly-items">
+                              {eventBucket?.events.length ? (
+                                eventBucket.events.map((event) => (
+                                  <div
+                                    key={`event-${event.id}`}
+                                    className={`weekly-event editable category-${event.category || 'work'}`}
+                                    onClick={() => openEventEditor(event)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(eventKey) => {
+                                      if (eventKey.key === 'Enter' || eventKey.key === ' ') {
+                                        eventKey.preventDefault()
+                                        openEventEditor(event)
+                                      }
+                                    }}
+                                    aria-label={`Edit ${event.title}`}
+                                  >
+                                    <div style={{ width: '100%' }}>
+                                      <div className="task-topline">
+                                        <strong>{event.title}</strong>
+                                      </div>
+                                      <p>{formatDateForDisplay(event.date)}</p>
+                                      {getRepeatSummary(event) ? <p>{getRepeatSummary(event)}</p> : null}
+                                      <p>{formatEventTime(event)} · {event.location}</p>
+                                    </div>
                                   </div>
-                                </div>
-                              ))
-                          ) : null}
-
-                          {bucket.tasks.length ? (
-                            bucket.tasks.map((task) => (
-                              <div
-                                key={task.id}
-                                className={`weekly-task editable ${task.completed ? 'completed' : ''}`}
-                                onClick={() => openTaskEditor(task)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(event) => {
-                                  if (event.key === 'Enter' || event.key === ' ') {
-                                    event.preventDefault()
-                                    openTaskEditor(task)
-                                  }
-                                }}
-                                aria-label={`Edit ${task.title}`}
-                              >
-                                <span className={`priority priority-${task.priority.toLowerCase()}`}>{task.priority}</span>
-                                <div>
-                                  <strong>{task.title}</strong>
-                                  <p>{task.due}</p>
-                                  {getRepeatSummary(task) ? <p>{getRepeatSummary(task)}</p> : null}
-                                  <p>{task.estimatedMinutes} min · Diff {task.difficulty}/5</p>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="weekly-empty">Nothing scheduled.</p>
+                                ))
+                              ) : null}
+                    
+                              {bucket.tasks.length ? (
+                                bucket.tasks.map((task) => (
+                                  <div
+                                    key={task.id}
+                                    className={`weekly-task editable ${task.completed ? 'completed' : ''} category-${task.category || 'work'}`}
+                                    onClick={() => openTaskEditor(task)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(event) => {
+                                      if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault()
+                                        openTaskEditor(task)
+                                      }
+                                    }}
+                                    aria-label={`Edit ${task.title}`}
+                                  >
+                                    <div style={{ width: '100%' }}>
+                                      <div className="task-topline">
+                                        <strong>{task.title}</strong>
+                                        <span className={`priority priority-${task.priority.toLowerCase()}`}>{shortPriority(task.priority)}</span>
+                                      </div>
+                                      <p>{task.due}</p>
+                                      {getRepeatSummary(task) ? <p>{getRepeatSummary(task)}</p> : null}
+                                      <p>{task.estimatedMinutes} min · Diff {task.difficulty}/5</p>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="weekly-empty">Nothing scheduled.</p>
+                              )}
+                            </div>
                           )}
-                        </div>
-                      </article>
-                    )})
+                        </article>
+                      )
+                    })
                   ) : (
                     <div className="empty-state">No tasks match the current search.</div>
                   )}

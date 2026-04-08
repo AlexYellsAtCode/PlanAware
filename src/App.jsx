@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 
 function formatWeekDue(dayOffset, hour24, minute) {
   const today = new Date()
@@ -570,68 +570,60 @@ function App() {
   }, [filteredEvents])
 
   const timeline = useMemo(() => {
-    const timelineHours = 5
     const intervalMinutes = 15
-    const totalMinutes = timelineHours * 60
+    const totalMinutes = 24 * 60
     const tickCount = totalMinutes / intervalMinutes
     const today = startOfDay(new Date())
-
+  
     const windowStart = new Date(selectedDate)
-    if (isSameDay(selectedDate, today)) {
-      const now = new Date()
-      windowStart.setHours(now.getHours(), Math.floor(now.getMinutes() / intervalMinutes) * intervalMinutes, 0, 0)
-    } else {
-      windowStart.setHours(8, 0, 0, 0)
-    }
-
-    const windowEnd = new Date(windowStart)
-    windowEnd.setMinutes(windowEnd.getMinutes() + totalMinutes)
-
+    windowStart.setHours(0, 0, 0, 0)
+  
+    const windowEnd = new Date(selectedDate)
+    windowEnd.setHours(23, 59, 59, 999)
+  
+    const now = new Date()
+    const currentTimePercent = isSameDay(selectedDate, today)
+      ? ((now.getHours() * 60 + now.getMinutes()) / totalMinutes) * 100
+      : null
+  
     const eventBars = dailyEvents
       .map((event) => {
         const startDate = new Date(selectedDate)
         const endDate = new Date(selectedDate)
-
+  
         const startHour24 = to24Hour(event.startHour, event.startPeriod)
         const endHour24 = to24Hour(event.endHour, event.endPeriod)
         const startMinute = Math.max(0, Math.min(59, Number.parseInt(event.startMinute, 10) || 0))
         const endMinute = Math.max(0, Math.min(59, Number.parseInt(event.endMinute, 10) || 0))
-
+  
         startDate.setHours(startHour24, startMinute, 0, 0)
         endDate.setHours(endHour24, endMinute, 0, 0)
-
+  
         if (endDate <= startDate) {
           endDate.setDate(endDate.getDate() + 1)
         }
-
-        const overlapStart = startDate < windowStart ? windowStart : startDate
-        const overlapEnd = endDate > windowEnd ? windowEnd : endDate
-
-        if (overlapEnd <= overlapStart) return null
-
-        const offsetMinutes = (overlapStart.getTime() - windowStart.getTime()) / (60 * 1000)
-        const durationMinutes = (overlapEnd.getTime() - overlapStart.getTime()) / (60 * 1000)
-
+  
+        const offsetMinutes = (startDate.getTime() - windowStart.getTime()) / (60 * 1000)
+        const durationMinutes = (endDate.getTime() - startDate.getTime()) / (60 * 1000)
+  
         return {
           id: `event-timeline-${event.id}`,
           title: event.title,
           category: event.category || 'work',
           leftPercent: (offsetMinutes / totalMinutes) * 100,
-          widthPercent: Math.max(0.8, (durationMinutes / totalMinutes) * 100),
+          widthPercent: Math.max(0.4, (durationMinutes / totalMinutes) * 100),
         }
       })
       .filter(Boolean)
-
+  
     const taskDots = dailyTasks
       .map((task) => {
         const anchorDate = parseDueDateTime(task.due)
         if (Number.isNaN(anchorDate.getTime())) return null
-
+  
         const dueDate = new Date(selectedDate)
         dueDate.setHours(anchorDate.getHours(), anchorDate.getMinutes(), 0, 0)
-
-        if (dueDate < windowStart || dueDate > windowEnd) return null
-
+  
         const offsetMinutes = (dueDate.getTime() - windowStart.getTime()) / (60 * 1000)
         return {
           id: `task-timeline-${task.id}`,
@@ -641,19 +633,26 @@ function App() {
         }
       })
       .filter(Boolean)
-
+  
     const ticks = Array.from({ length: tickCount + 1 }, (_, index) => ({
       id: `tick-${index}`,
       leftPercent: (index / tickCount) * 100,
       isHourMark: index % 4 === 0,
+      hourLabel: index % 4 === 0 ? (() => {
+        const h = Math.floor((index * intervalMinutes) / 60)
+        const period = h >= 12 ? 'PM' : 'AM'
+        const h12 = h % 12 || 12
+        return `${h12}${period}`
+      })() : null,
     }))
-
+  
     return {
-      startLabel: toClockLabel(windowStart),
-      endLabel: toClockLabel(windowEnd),
+      startLabel: '12 AM',
+      endLabel: '11 PM',
       ticks,
       eventBars,
       taskDots,
+      currentTimePercent,
     }
   }, [dailyEvents, dailyTasks, selectedDate])
 
@@ -705,6 +704,55 @@ function App() {
       }
     })
   }, [tasks, events, selectedDate])
+
+  const timelineScrollRef = useRef(null)
+
+  useEffect(() => {
+    const el = timelineScrollRef.current
+    if (!el || timeline.currentTimePercent === null) return
+    const TRACK_WIDTH = 1440
+    const scrollTarget = (timeline.currentTimePercent / 100) * TRACK_WIDTH - el.clientWidth / 2
+    el.scrollLeft = Math.max(0, scrollTarget)
+  }, [timeline.currentTimePercent, selectedDate])
+  
+  useEffect(() => {
+    const el = timelineScrollRef.current
+    if (!el) return
+  
+    let isDragging = false
+    let startX = 0
+    let startScrollLeft = 0
+  
+    function onPointerDown(e) {
+      isDragging = true
+      startX = e.clientX
+      startScrollLeft = el.scrollLeft
+      el.setPointerCapture(e.pointerId)
+      e.preventDefault()
+    }
+  
+    function onPointerMove(e) {
+      if (!isDragging) return
+      const delta = e.clientX - startX
+      el.scrollLeft = startScrollLeft - delta
+    }
+  
+    function onPointerUp() {
+      isDragging = false
+    }
+  
+    el.addEventListener('pointerdown', onPointerDown)
+    el.addEventListener('pointermove', onPointerMove)
+    el.addEventListener('pointerup', onPointerUp)
+    el.addEventListener('pointercancel', onPointerUp)
+  
+    return () => {
+      el.removeEventListener('pointerdown', onPointerDown)
+      el.removeEventListener('pointermove', onPointerMove)
+      el.removeEventListener('pointerup', onPointerUp)
+      el.removeEventListener('pointercancel', onPointerUp)
+    }
+  }, [])
 
   function shiftSelectedDate(days) {
     setSelectedDate((current) => startOfDay(addDays(current, days)))
@@ -931,39 +979,57 @@ function App() {
 
             {screen === 'home' ? (
               <>
-                <section className="timeline-section" aria-label="Upcoming five-hour timeline">
-                  <div className="timeline-label-row">
-                    <span>{timeline.startLabel}</span>
-                    <span>{timeline.endLabel}</span>
+              <section className="timeline-section" aria-label="Full day timeline">
+                <div className="timeline-scroll-wrapper" ref={timelineScrollRef}>
+                  <div className="timeline-inner">
+                    <div className="timeline-label-row">
+                      {timeline.ticks.filter((t) => t.isHourMark).map((tick) => (
+                        <span
+                          key={`label-${tick.id}`}
+                          className="timeline-hour-label"
+                          style={{ left: `${tick.leftPercent}%` }}
+                        >
+                          {tick.hourLabel}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="timeline-track">
+                      {timeline.ticks.map((tick) => (
+                        <span
+                          key={tick.id}
+                          className={tick.isHourMark ? 'timeline-tick hour' : 'timeline-tick quarter'}
+                          style={{ left: `${tick.leftPercent}%` }}
+                          aria-hidden="true"
+                        />
+                      ))}
+                      {timeline.eventBars.map((eventBar) => (
+                        <span
+                          key={eventBar.id}
+                          className={`timeline-event-bar category-${eventBar.category}`}
+                          style={{ left: `${eventBar.leftPercent}%`, width: `${eventBar.widthPercent}%` }}
+                          title={eventBar.title}
+                          aria-label={eventBar.title}
+                        />
+                      ))}
+                      {timeline.taskDots.map((taskDot) => (
+                        <span
+                          key={taskDot.id}
+                          className={`timeline-task-dot category-${taskDot.category}`}
+                          style={{ left: `${taskDot.leftPercent}%` }}
+                          title={taskDot.title}
+                          aria-label={taskDot.title}
+                        />
+                      ))}
+                      {timeline.currentTimePercent !== null && (
+                        <span
+                          className="timeline-now-dot"
+                          style={{ left: `${timeline.currentTimePercent}%` }}
+                          aria-label="Current time"
+                        />
+                      )}
+                    </div>
                   </div>
-                  <div className="timeline-track">
-                    {timeline.ticks.map((tick) => (
-                      <span
-                        key={tick.id}
-                        className={tick.isHourMark ? 'timeline-tick hour' : 'timeline-tick quarter'}
-                        style={{ left: `${tick.leftPercent}%` }}
-                        aria-hidden="true"
-                      />
-                    ))}
-                    {timeline.eventBars.map((eventBar) => (
-                      <span
-                        key={eventBar.id}
-                        className={`timeline-event-bar category-${eventBar.category}`}
-                        style={{ left: `${eventBar.leftPercent}%`, width: `${eventBar.widthPercent}%` }}
-                        title={eventBar.title}
-                        aria-label={eventBar.title}
-                      />
-                    ))}
-                    {timeline.taskDots.map((taskDot) => (
-                      <span
-                        key={taskDot.id}
-                        className={`timeline-task-dot category-${taskDot.category}`}
-                        style={{ left: `${taskDot.leftPercent}%` }}
-                        title={taskDot.title}
-                        aria-label={taskDot.title}
-                      />
-                    ))}
-                  </div>
+                </div>
                 </section>
 
                 <div className="search-row">

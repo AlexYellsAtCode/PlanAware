@@ -406,15 +406,46 @@ button {
 
 .timeline-section {
   display: grid;
-  gap: 6px;
+  gap: 0;
+}
+
+.timeline-scroll-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  padding-bottom: 4px;
+}
+
+.timeline-scroll-wrapper:active {
+  cursor: grabbing;
+}
+
+.timeline-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.timeline-inner {
+  position: relative;
+  width: 1440px;
+  padding-top: 18px;
 }
 
 .timeline-label-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.66rem;
-  color: rgba(226, 232, 240, 0.68);
+  position: relative;
+  height: 16px;
+  margin-bottom: 4px;
+}
+
+.timeline-hour-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.58rem;
+  color: rgba(226, 232, 240, 0.55);
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .timeline-track {
@@ -423,7 +454,7 @@ button {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.72);
   border: 1px solid rgba(148, 163, 184, 0.22);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .timeline-tick {
@@ -465,6 +496,19 @@ button {
   border: 1px solid rgba(15, 23, 42, 0.8);
   z-index: 3;
   box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.6);
+}
+
+.timeline-now-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid rgba(15, 23, 42, 0.9);
+  z-index: 5;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.8), 0 0 8px rgba(99, 102, 241, 0.6);
 }
 
 .timeline-event-bar.category-work,

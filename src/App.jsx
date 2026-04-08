@@ -6,7 +6,7 @@ function shortPriority(priority) {
 }
 
 function formatWeekDue(dayOffset, hour24, minute) {
-  const today = new Date()
+  const today = new Date() 
   const weekStart = new Date(today)
   weekStart.setDate(today.getDate() - today.getDay())
 
@@ -102,6 +102,11 @@ const fakeBackend = {
     fakeTasks = fakeTasks.map((task) => (task.id === id ? { ...task, ...updates } : task))
     return clone(fakeTasks.find((task) => task.id === id))
   },
+  async deleteTask(id){
+    await wait (400)
+    fakeTasks = fakeTasks.filter((task) => task.id !== id)
+    return id
+  },
   async listEvents() {
     await wait(500)
     return clone(fakeEvents)
@@ -117,6 +122,11 @@ const fakeBackend = {
     fakeEvents = fakeEvents.map((event) => (event.id === id ? { ...event, ...updates } : event))
     return clone(fakeEvents.find((event) => event.id === id))
   },
+  async deleteEvent(id) {
+    await wait(400)
+    fakeEvents = fakeEvents.filter((event) => event.id !== id)
+    return id
+  }
 }
 
 function wait(ms) {
@@ -468,6 +478,7 @@ function App() {
   const [composerMode, setComposerMode] = useState('task')
   const [editingTaskId, setEditingTaskId] = useState(null)
   const [editingEventId, setEditingEventId] = useState(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
   const [touchStartX, setTouchStartX] = useState(null)
@@ -862,6 +873,10 @@ function App() {
     })
   }
 
+  function handleCancelDelete(){
+    setDeleteConfirmOpen(false)
+  }
+
   async function handleSaveTask(event) {
     event.preventDefault()
     if (!form.title.trim()) return
@@ -892,6 +907,23 @@ function App() {
       setTasks((current) => [added, ...current])
     }
 
+    setForm(createDefaultForm())
+    setSyncing(false)
+    closeComposer()
+  }
+
+  async function handleConfirmDeleteTask(){
+    if (editingTaskId === null) return
+
+    setSyncing(true)
+
+    await fakeBackend.deleteTask(editingTaskId)
+
+    setTasks((current) =>
+      current.filter((task) => task.id !== editingTaskId)
+    )
+    
+    setDeleteConfirmOpen(false)
     setForm(createDefaultForm())
     setSyncing(false)
     closeComposer()
@@ -928,6 +960,23 @@ function App() {
     }
 
     setEventForm(createDefaultEventForm())
+    setSyncing(false)
+    closeComposer()
+  }
+
+  async function handleConfirmDeleteEvent(){
+    if (editingEventId === null) return
+
+    setSyncing(true)
+
+    await fakeBackend.deleteEvent(editingEventId)
+
+    setEvents((current) =>
+      current.filter((event) => event.id !== editingEventId)
+    )
+    
+    setDeleteConfirmOpen(false)
+    setForm(createDefaultForm())
     setSyncing(false)
     closeComposer()
   }
@@ -1258,6 +1307,44 @@ function App() {
               </section>
             )}
           </div>
+          
+          {deleteConfirmOpen && (
+            <div className="delete-modal-backdrop" onClick={handleCancelDelete}>
+              <div
+                className="delete-modal"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <h3 className="delete-modal-title">Delete task?</h3>
+                <p className="delete-modal-text">
+                  Delete cannot be undone.
+                </p>
+
+                <div className="delete-modal-actions">
+                  <button
+                    type="button"
+                    className="delete-cancel-btn"
+                    onClick={handleCancelDelete}
+                    disabled={syncing}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    className="delete-confirm-btn"
+                    onClick={
+                      composerMode === 'task'
+                      ? handleConfirmDeleteTask
+                      : handleConfirmDeleteEvent
+                    }
+                    disabled={syncing}
+                  >
+                    {syncing ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {addMenuOpen ? (
             <div className="add-action-menu" role="menu" aria-label="Create item">
@@ -1273,7 +1360,6 @@ function App() {
           <button className={`floating-add${addMenuOpen ? ' is-active' : ''}`} onClick={toggleAddMenu} aria-label="Create new item" aria-expanded={addMenuOpen}>
             <span className="floating-add-icon">+</span>
           </button>
-
           {composerOpen ? (
             <div className="composer-backdrop" onClick={closeComposer}>
               <form className="composer-sheet" onSubmit={composerMode === 'task' ? handleSaveTask : handleSaveEvent} onClick={(event) => event.stopPropagation()}>
@@ -1638,9 +1724,16 @@ function App() {
                 <button type="submit" disabled={syncing} className="compose-submit-btn">
                   {syncing ? 'Syncing…' : composerMode === 'task' ? (editingTaskId !== null ? 'Save' : 'Submit') : (editingEventId !== null ? 'Save' : 'Create Event')}
                 </button>
+                {((composerMode === 'task' && editingTaskId !== null) ||
+                  (composerMode === 'event' && editingEventId !== null)) && (
+                  <button type="button" disabled={syncing} className="compose-delete-btn" onClick={()=>setDeleteConfirmOpen(true)}>
+                    Delete
+                  </button>
+                )}
               </form>
             </div>
           ) : null}
+
 
           <nav className="bottom-nav" aria-label="Primary navigation">
             <button type="button" className={screen === 'home' ? 'nav-button active' : 'nav-button'} onClick={() => setScreen('home')}>

@@ -377,6 +377,7 @@ function occursOnDate(item, anchorDate, targetDate) {
 
 function App() {
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()))
+  const [currentTime, setCurrentTime] = useState(() => new Date())
 
   const [collapsedBuckets, setCollapsedBuckets] = useState({})
 
@@ -391,10 +392,34 @@ function App() {
     month: '2-digit',
     day: '2-digit',
   })
+
+  useEffect(() => {
+    const updateClock = () => setCurrentTime(new Date())
+    updateClock()
+    const timerId = window.setInterval(updateClock, 1000)
+
+    return () => window.clearInterval(timerId)
+  }, [])
   
   const getTodayISOString = () => {
     const date = new Date()
-    return date.toISOString().split('T')[0]
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  const getUpcomingHourDefaults = () => {
+    const now = new Date()
+    const nextHour24 = Math.min(23, now.getHours() + 1)
+    const hour12 = nextHour24 % 12 || 12
+    const period = nextHour24 >= 12 ? 'PM' : 'AM'
+
+    return {
+      dueTimeHour: String(hour12).padStart(2, '0'),
+      dueTimeMinute: '00',
+      dueTimePeriod: period,
+    }
   }
   
   const formatDateForDisplay = (isoDate) => {
@@ -407,9 +432,7 @@ function App() {
     notes: '',
     priority: 'Medium',
     dueDate: getTodayISOString(),
-    dueTimeHour: '02',
-    dueTimeMinute: '00',
-    dueTimePeriod: 'PM',
+    ...getUpcomingHourDefaults(),
     estimatedMinutes: '30',
     difficulty: '3',
     category: 'work',
@@ -612,7 +635,7 @@ function App() {
     const intervalMinutes = 15
     const totalMinutes = 24 * 60
     const tickCount = totalMinutes / intervalMinutes
-    const today = startOfDay(new Date())
+    const today = startOfDay(currentTime)
   
     const windowStart = new Date(selectedDate)
     windowStart.setHours(0, 0, 0, 0)
@@ -620,9 +643,8 @@ function App() {
     const windowEnd = new Date(selectedDate)
     windowEnd.setHours(23, 59, 59, 999)
   
-    const now = new Date()
     const currentTimePercent = isSameDay(selectedDate, today)
-      ? ((now.getHours() * 60 + now.getMinutes()) / totalMinutes) * 100
+      ? ((currentTime.getHours() * 60 + currentTime.getMinutes()) / totalMinutes) * 100
       : null
   
     const eventBars = dailyEvents
@@ -693,7 +715,7 @@ function App() {
       taskDots,
       currentTimePercent,
     }
-  }, [dailyEvents, dailyTasks, selectedDate])
+  }, [currentTime, dailyEvents, dailyTasks, selectedDate])
 
   const capacity = useMemo(() => {
     const selectedDayTasks = tasks.filter((task) => {
@@ -1084,7 +1106,7 @@ function App() {
     <main className="page-shell">
       <div className="phone-frame">
         <header className="status-bar">
-          <span>9:41</span>
+          <span>{toClockLabel(currentTime)}</span>
           <div className="status-icons" aria-hidden="true">
             <span className="cell-icon">
               <i />
@@ -1156,6 +1178,13 @@ function App() {
                           aria-hidden="true"
                         />
                       ))}
+                      {timeline.currentTimePercent !== null && (
+                        <span
+                          className="timeline-now-line"
+                          style={{ left: `${timeline.currentTimePercent}%` }}
+                          aria-hidden="true"
+                        />
+                      )}
                       {timeline.eventBars.map((eventBar) => (
                         <span
                           key={eventBar.id}
@@ -1886,13 +1915,44 @@ function App() {
 
           <nav className="bottom-nav" aria-label="Primary navigation">
             <button type="button" className={screen === 'home' ? 'nav-button active' : 'nav-button'} onClick={() => setScreen('home')}>
-              <span>Home Screen</span>
+              <span className="nav-button-content">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M3 10.5L12 3l9 7.5" />
+                  <path d="M5.5 9.5V20h13V9.5" />
+                  <path d="M10 20v-6h4v6" />
+                </svg>
+                <span>Home</span>
+              </span>
             </button>
             <button type="button" className={screen === 'weekly' ? 'nav-button active' : 'nav-button'} onClick={() => setScreen('weekly')}>
-              <span>Weekly View Screen</span>
+              <span className="nav-button-content">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="3" y="5" width="18" height="16" rx="3" ry="3" />
+                  <path d="M3 9h18" />
+                  <path d="M8 3v4" />
+                  <path d="M16 3v4" />
+                  <path d="M7 13h10" />
+                  <path d="M7 17h6" />
+                </svg>
+                <span>Weekly View</span>
+              </span>
             </button>
             <button type="button" className={screen === 'monthly' ? 'nav-button active' : 'nav-button'} onClick={() => setScreen('monthly')}>
-              <span>Monthly Calendar</span>
+              <span className="nav-button-content">
+                <svg className="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="3" y="5" width="18" height="16" rx="3" ry="3" />
+                  <path d="M3 9h18" />
+                  <path d="M8 3v4" />
+                  <path d="M16 3v4" />
+                  <path d="M8 13h2" />
+                  <path d="M12 13h2" />
+                  <path d="M16 13h2" />
+                  <path d="M8 17h2" />
+                  <path d="M12 17h2" />
+                  <path d="M16 17h2" />
+                </svg>
+                <span>Monthly View</span>
+              </span>
             </button>
           </nav>
         </section>

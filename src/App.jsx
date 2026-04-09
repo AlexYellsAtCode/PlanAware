@@ -1158,6 +1158,13 @@ function App() {
               <section className="timeline-section" aria-label="Full day timeline">
                 <div className="timeline-scroll-wrapper" ref={timelineScrollRef}>
                   <div className="timeline-inner">
+                    {timeline.currentTimePercent !== null && (
+                      <span
+                        className="timeline-now-line"
+                        style={{ left: `${timeline.currentTimePercent}%` }}
+                        aria-hidden="true"
+                      />
+                    )}
                     <div className="timeline-label-row">
                       {timeline.ticks.filter((t) => t.isHourMark).map((tick) => (
                         <span
@@ -1178,13 +1185,6 @@ function App() {
                           aria-hidden="true"
                         />
                       ))}
-                      {timeline.currentTimePercent !== null && (
-                        <span
-                          className="timeline-now-line"
-                          style={{ left: `${timeline.currentTimePercent}%` }}
-                          aria-hidden="true"
-                        />
-                      )}
                       {timeline.eventBars.map((eventBar) => (
                         <span
                           key={eventBar.id}
@@ -1203,13 +1203,6 @@ function App() {
                           aria-label={taskDot.title}
                         />
                       ))}
-                      {timeline.currentTimePercent !== null && (
-                        <span
-                          className="timeline-now-dot"
-                          style={{ left: `${timeline.currentTimePercent}%` }}
-                          aria-label="Current time"
-                        />
-                      )}
                     </div>
                   </div>
                 </div>

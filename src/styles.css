@@ -407,6 +407,7 @@ button {
 .timeline-section {
   display: grid;
   gap: 0;
+  margin-top: -16px;
 }
 
 .timeline-scroll-wrapper {
@@ -487,14 +488,38 @@ button {
 
 .timeline-now-line {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 32px;
+  bottom: -10px;
   width: 2px;
   transform: translateX(-50%);
   background: linear-gradient(180deg, rgba(59, 130, 246, 0.15), #3b82f6 18%, #60a5fa 82%, rgba(59, 130, 246, 0.15));
   z-index: 4;
   box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35), 0 0 10px rgba(59, 130, 246, 0.45);
   pointer-events: none;
+}
+
+.timeline-now-line::before {
+  content: '▼';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #3b82f6;
+  font-size: 0.72rem;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(59, 130, 246, 0.55);
+}
+
+.timeline-now-line::after {
+  content: '▲';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #3b82f6;
+  font-size: 0.72rem;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(59, 130, 246, 0.55);
 }
 
 .timeline-task-dot {
@@ -507,19 +532,6 @@ button {
   border: 1px solid rgba(15, 23, 42, 0.8);
   z-index: 3;
   box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.6);
-}
-
-.timeline-now-dot {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 2px solid rgba(15, 23, 42, 0.9);
-  z-index: 5;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.8), 0 0 8px rgba(99, 102, 241, 0.6);
 }
 
 .timeline-event-bar.category-work,

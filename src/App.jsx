@@ -240,6 +240,7 @@ function getPriorityValue(priority) {
 }
 
 function getCapacityLevel(value) {
+  if (value === 0) return 'none'
   if (value <= 40) return 'low'
   if (value <= 70) return 'medium'
   return 'high'
@@ -805,6 +806,80 @@ function App() {
     setTouchStartY(null)
   }
 
+  /* ----------------------------------------------------Helper functions for monthly calender view---------------------------------------------------*/
+
+  const [visibleMonth, setVisibleMonth] = useState(new Date())
+
+  const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  function getMonthName(date) {
+    return date.toLocaleString('default', { month: 'long', year: 'numeric' })
+  }
+
+
+  function goToPreviousMonth() {
+    setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))
+  }
+
+  function goToNextMonth() {
+    setVisibleMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))
+  }
+
+  const monthlyCalendarCells = useMemo(() => {
+    const year = visibleMonth.getFullYear()
+    const month = visibleMonth.getMonth()
+
+    const firstDay = new Date(year, month, 1).getDay()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    const realDayCells = Array.from({ length: daysInMonth }, (_, index) => {
+      const dayNumber = index + 1
+      const dayDate = new Date(year, month, dayNumber)
+
+      const dayTasks = []
+      const dayEvents = []
+
+      tasks.forEach((task) => {
+        const anchorDate = parseDueDateTime(task.due)
+        if (Number.isNaN(anchorDate.getTime())) return
+
+        if (occursOnDate(task, anchorDate, dayDate)) {
+          dayTasks.push(task)
+        }
+      })
+
+      events.forEach((event) => {
+        const anchorDate = new Date(`${event.date}T00:00:00`)
+        if (Number.isNaN(anchorDate.getTime())) return
+
+        if (occursOnDate(event, anchorDate, dayDate)) {
+          dayEvents.push(event)
+        }
+      })
+
+      return {
+        dayNumber,
+        date: dayDate,
+        value: calculateCapacityWithEvents(dayTasks, dayEvents),
+        isToday: isSameDay(dayDate, new Date()),
+        isSelected: isSameDay(dayDate, selectedDate),
+      }
+    })
+
+    const paddedCells = [
+      ...Array(firstDay).fill(null),
+      ...realDayCells,
+    ]
+
+    while (paddedCells.length % 7 !== 0) {
+      paddedCells.push(null)
+    }
+
+    return paddedCells
+  }, [tasks, events, visibleMonth, selectedDate])
+
+/* --------------------------------------------------------------------------------------------------------------*/
+
   function openNewTaskComposer() {
     setAddMenuOpen(false)
     setComposerMode('task')
@@ -1039,7 +1114,7 @@ function App() {
               </div>
             </div>
 
-            {screen === 'home' ? (
+            {screen === 'home' && (
               <>
               <section className="timeline-section" aria-label="Full day timeline">
                 <div className="timeline-scroll-wrapper" ref={timelineScrollRef}>
@@ -1206,7 +1281,9 @@ function App() {
                 </div>
               </section>
               </>
-            ) : (
+            )}
+
+            {screen === 'weekly' && (
               <section className="task-section weekly-section">
                 <div className="section-heading">
                   <h2>Weekly View</h2>
@@ -1306,6 +1383,61 @@ function App() {
                 </div>
               </section>
             )}
+
+            {screen === 'monthly' && (
+              <section className="task-section monthly-section">
+                <div className="section-heading">
+                  <h2>Monthly View</h2>
+                  <span>{getMonthName(visibleMonth)}</span>
+                </div>
+
+                <div className="month-header">
+                  <button type="button" className="month-nav-btn" onClick={goToPreviousMonth}>
+                    ←
+                  </button>
+                  <h3>{getMonthName(visibleMonth)}</h3>
+                  <button type="button" className="month-nav-btn" onClick={goToNextMonth}>
+                    →
+                  </button>
+                </div>
+
+                <div className="weekday-row">
+                  {weekdayLabels.map((day) => (
+                    <div key={day} className="weekday-cell">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="month-grid">
+                  {monthlyCalendarCells.map((cell, index) => {
+                    if (cell === null) {
+                      return <div key={index} className="month-cell empty" />
+                    }
+
+                    let cellClass = `month-cell level-${getCapacityLevel(cell.value)}`
+                    if (cell.isToday) {
+                      cellClass += ' today'
+                    }
+
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        className={cellClass}
+                        onClick={() => {
+                          setSelectedDate(cell.date)
+                          setScreen('home')
+                        }}
+                      >
+                        {cell.dayNumber}
+                      </button>
+                    )
+                  })}
+                </div>
+            </section>
+          )}
+
           </div>
           
           {deleteConfirmOpen && (
@@ -1741,6 +1873,9 @@ function App() {
             </button>
             <button type="button" className={screen === 'weekly' ? 'nav-button active' : 'nav-button'} onClick={() => setScreen('weekly')}>
               <span>Weekly View Screen</span>
+            </button>
+            <button type="button" className={screen === 'monthly' ? 'nav-button active' : 'nav-button'} onClick={() => setScreen('monthly')}>
+              <span>Monthly Calendar</span>
             </button>
           </nav>
         </section>

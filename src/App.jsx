@@ -782,25 +782,22 @@ function App() {
     setSelectedDate((current) => startOfDay(addDays(current, days)))
   }
 
-  function handleTouchStart(event) {
-    if (screen !== 'home') return
-    const touch = event.touches[0]
+  function handleTouchStart(e) {
+    const touch = e.touches[0]
     setTouchStartX(touch.clientX)
     setTouchStartY(touch.clientY)
   }
-
-  function handleTouchEnd(event) {
-    if (screen !== 'home' || touchStartX === null || touchStartY === null) return
-
-    const touch = event.changedTouches[0]
+  
+  function handleTouchEnd(e) {
+    if (touchStartX === null || touchStartY === null) return
+    const touch = e.changedTouches[0]
     const deltaX = touch.clientX - touchStartX
     const deltaY = touch.clientY - touchStartY
-    const horizontalThreshold = 50
-
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= horizontalThreshold) {
+  
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= 50) {
       shiftSelectedDate(deltaX < 0 ? 1 : -1)
     }
-
+  
     setTouchStartX(null)
     setTouchStartY(null)
   }
@@ -1008,8 +1005,7 @@ function App() {
         </header>
 
         <section className="app-card">
-          <div className="screen-shell">
-              <div className="hero">
+        <div className="screen-shell" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>              <div className="hero">
               <div className="hero-row">
                 <div className="date-pill">
                   <span>{currentDay}</span>
@@ -1042,7 +1038,8 @@ function App() {
             {screen === 'home' ? (
               <>
               <section className="timeline-section" aria-label="Full day timeline">
-                <div className="timeline-scroll-wrapper" ref={timelineScrollRef}>
+                <div className="timeline-scroll-wrapper" ref={timelineScrollRef} onTouchStart={(e) => e.stopPropagation()}
+  onTouchEnd={(e) => e.stopPropagation()}>
                   <div className="timeline-inner">
                     <div className="timeline-label-row">
                       {timeline.ticks.filter((t) => t.isHourMark).map((tick) => (

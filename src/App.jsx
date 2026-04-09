@@ -211,6 +211,17 @@ function getRelativeTimingBucket(dateValue, anchorDate) {
   return 'outside-week'
 }
 
+function formatShortDateLabel(dateString) {
+  const date = new Date(`${dateString}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return ''
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 function parseDueDateTime(dueString) {
   try {
     const dateTimeRegex = /^(.+?)\s+(\d{1,2}):(\d{2})\s+(AM|PM)$/
@@ -375,7 +386,11 @@ function getRepeatSummary(item) {
     const days = normalizeRepeatDays(item.repeatWeekDays)
     if (!days.length) return 'Repeats weekly (custom days)'
     const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return `Repeats ${days.map((day) => labels[day]).join(', ')}`
+    const summary = `Repeats ${days.map((day) => labels[day]).join(', ')}`
+    return item.repeatEndDate ? `${summary} until ${formatShortDateLabel(item.repeatEndDate)}` : summary
+  }
+  if (item.repeatEndDate) {
+    return `Repeats until ${formatShortDateLabel(item.repeatEndDate)}`
   }
   return ''
 }
@@ -385,6 +400,8 @@ function occursOnDate(item, anchorDate, targetDate) {
 
   const anchor = startOfDay(anchorDate)
   const target = startOfDay(targetDate)
+  const repeatEndDate = item.repeatEndDate ? startOfDay(new Date(`${item.repeatEndDate}T00:00:00`)) : null
+  if (repeatEndDate && !Number.isNaN(repeatEndDate.getTime()) && target.getTime() > repeatEndDate.getTime()) return false
   const millisPerDay = 24 * 60 * 60 * 1000
   const dayDiff = Math.round((target.getTime() - anchor.getTime()) / millisPerDay)
   const repeatType = item.repeatType || 'none'
@@ -477,6 +494,7 @@ function App() {
     repeatType: 'none',
     repeatWeekDays: [],
     repeatEveryNDays: '2',
+    repeatEndDate: '',
   })
 
   const createDefaultEventForm = () => ({
@@ -494,6 +512,7 @@ function App() {
     repeatType: 'none',
     repeatWeekDays: [],
     repeatEveryNDays: '2',
+    repeatEndDate: '',
   })
 
   const getFormFromEvent = (event) => ({
@@ -511,6 +530,7 @@ function App() {
     repeatType: event.repeatType || 'none',
     repeatWeekDays: normalizeRepeatDays(event.repeatWeekDays),
     repeatEveryNDays: String(event.repeatEveryNDays || '2'),
+    repeatEndDate: event.repeatEndDate || '',
   })
 
   const getFormFromTask = (task) => {
@@ -538,6 +558,7 @@ function App() {
       repeatType: task.repeatType || 'none',
       repeatWeekDays: normalizeRepeatDays(task.repeatWeekDays),
       repeatEveryNDays: String(task.repeatEveryNDays || '2'),
+      repeatEndDate: task.repeatEndDate || '',
     }
   }
   
@@ -1058,6 +1079,7 @@ function App() {
       repeatType: form.repeatType,
       repeatWeekDays: normalizeRepeatDays(form.repeatWeekDays),
       repeatEveryNDays: Math.max(1, Number.parseInt(form.repeatEveryNDays, 10) || 1),
+      repeatEndDate: form.repeatType === 'none' ? null : (form.repeatEndDate || null),
     }
 
     if (editingTaskId !== null) {
@@ -1110,6 +1132,7 @@ function App() {
       repeatType: eventForm.repeatType,
       repeatWeekDays: normalizeRepeatDays(eventForm.repeatWeekDays),
       repeatEveryNDays: Math.max(1, Number.parseInt(eventForm.repeatEveryNDays, 10) || 1),
+      repeatEndDate: eventForm.repeatType === 'none' ? null : (eventForm.repeatEndDate || null),
     }
 
     if (editingEventId !== null) {
@@ -1679,7 +1702,14 @@ function App() {
                   </label>
                   <label className="compose-field compose-full">
                     <span className="compose-label">Repeat</span>
-                    <select value={form.repeatType} onChange={(event) => setForm((current) => ({ ...current, repeatType: event.target.value }))}>
+                    <select
+                      value={form.repeatType}
+                      onChange={(event) => setForm((current) => ({
+                        ...current,
+                        repeatType: event.target.value,
+                        repeatEndDate: event.target.value === 'none' ? '' : current.repeatEndDate,
+                      }))}
+                    >
                       <option value="none">Does not repeat</option>
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
@@ -1717,6 +1747,16 @@ function App() {
                         onBlur={() => setForm((current) => ({ ...current, repeatEveryNDays: String(Math.max(1, Number.parseInt(current.repeatEveryNDays, 10) || 1)) }))}
                         inputMode="numeric"
                         placeholder="e.g. 3"
+                      />
+                    </label>
+                  ) : null}
+                  {form.repeatType !== 'none' ? (
+                    <label className="compose-field compose-full">
+                      <span className="compose-label">Repeat Until (Optional)</span>
+                      <input
+                        type="date"
+                        value={form.repeatEndDate}
+                        onChange={(event) => setForm((current) => ({ ...current, repeatEndDate: event.target.value }))}
                       />
                     </label>
                   ) : null}
@@ -1855,7 +1895,14 @@ function App() {
                     </label>
                     <label className="compose-field compose-full">
                       <span className="compose-label">Repeat</span>
-                      <select value={eventForm.repeatType} onChange={(event) => setEventForm((current) => ({ ...current, repeatType: event.target.value }))}>
+                      <select
+                        value={eventForm.repeatType}
+                        onChange={(event) => setEventForm((current) => ({
+                          ...current,
+                          repeatType: event.target.value,
+                          repeatEndDate: event.target.value === 'none' ? '' : current.repeatEndDate,
+                        }))}
+                      >
                         <option value="none">Does not repeat</option>
                         <option value="daily">Daily</option>
                         <option value="weekly">Weekly</option>
@@ -1893,6 +1940,16 @@ function App() {
                           onBlur={() => setEventForm((current) => ({ ...current, repeatEveryNDays: String(Math.max(1, Number.parseInt(current.repeatEveryNDays, 10) || 1)) }))}
                           inputMode="numeric"
                           placeholder="e.g. 2"
+                        />
+                      </label>
+                    ) : null}
+                    {eventForm.repeatType !== 'none' ? (
+                      <label className="compose-field compose-full">
+                        <span className="compose-label">Repeat Until (Optional)</span>
+                        <input
+                          type="date"
+                          value={eventForm.repeatEndDate}
+                          onChange={(event) => setEventForm((current) => ({ ...current, repeatEndDate: event.target.value }))}
                         />
                       </label>
                     ) : null}
@@ -1940,15 +1997,17 @@ function App() {
                     />
                   </div>
                 )}
-                <button type="submit" disabled={syncing} className="compose-submit-btn">
-                  {syncing ? 'Syncing…' : composerMode === 'task' ? (editingTaskId !== null ? 'Save' : 'Submit') : (editingEventId !== null ? 'Save' : 'Create Event')}
-                </button>
-                {((composerMode === 'task' && editingTaskId !== null) ||
-                  (composerMode === 'event' && editingEventId !== null)) && (
-                  <button type="button" disabled={syncing} className="compose-delete-btn" onClick={()=>setDeleteConfirmOpen(true)}>
-                    Delete
+                <div className={`compose-actions ${((composerMode === 'task' && editingTaskId !== null) || (composerMode === 'event' && editingEventId !== null)) ? 'has-delete' : ''}`}>
+                  <button type="submit" disabled={syncing} className="compose-submit-btn">
+                    {syncing ? 'Syncing…' : composerMode === 'task' ? (editingTaskId !== null ? 'Save' : 'Submit') : (editingEventId !== null ? 'Save' : 'Create Event')}
                   </button>
-                )}
+                  {((composerMode === 'task' && editingTaskId !== null) ||
+                    (composerMode === 'event' && editingEventId !== null)) && (
+                    <button type="button" disabled={syncing} className="compose-delete-btn" onClick={() => setDeleteConfirmOpen(true)}>
+                      Delete
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           ) : null}

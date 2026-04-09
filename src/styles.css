@@ -955,7 +955,6 @@ button {
 }
 
 .compose-submit-btn {
-  grid-column: 1 / -1;
   padding: 14px 16px;
   border-radius: 14px;
   border: 0;
@@ -979,26 +978,35 @@ button {
 }
 
 .compose-delete-btn {
-  grid-column: 1 / -1;
-  padding: 7px 7px;
-  border-radius: 7px;
-  border: 0;
-  background: linear-gradient(180deg, #f83838, #f1636f);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  background: rgba(127, 29, 29, 0.9);
   color: white;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(235, 37, 37, 0.35);
+  box-shadow: 0 4px 12px rgba(235, 37, 37, 0.25);
 }
 .compose-delete-btn:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(235, 37, 37, 0.45);
+  box-shadow: 0 6px 20px rgba(235, 37, 37, 0.38);
   transform: translateY(-1px);
 }
 
 .compose-delete-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.compose-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.compose-actions.has-delete {
+  grid-template-columns: minmax(0, 1fr) minmax(112px, 0.72fr);
 }
 
 

@@ -889,14 +889,14 @@ function App() {
   }
 
   function handleTouchStart(event) {
-    if (screen !== 'home' && screen !== 'weekly') return
+    if (screen !== 'home' && screen !== 'weekly' && screen !== 'monthly') return
     const touch = event.touches[0]
     setTouchStartX(touch.clientX)
     setTouchStartY(touch.clientY)
   }
 
   function handleTouchEnd(event) {
-    if ((screen !== 'home' && screen !== 'weekly') || touchStartX === null || touchStartY === null) return
+    if ((screen !== 'home' && screen !== 'weekly' && screen !== 'monthly') || touchStartX === null || touchStartY === null) return
 
     const touch = event.changedTouches[0]
     const deltaX = touch.clientX - touchStartX
@@ -904,8 +904,16 @@ function App() {
     const horizontalThreshold = 50
 
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= horizontalThreshold) {
-      const dayShift = screen === 'weekly' ? 7 : 1
-      shiftSelectedDate(deltaX < 0 ? dayShift : -dayShift)
+      if (screen === 'monthly') {
+        if (deltaX < 0) {
+          goToNextMonth()
+        } else {
+          goToPreviousMonth()
+        }
+      } else {
+        const dayShift = screen === 'weekly' ? 7 : 1
+        shiftSelectedDate(deltaX < 0 ? dayShift : -dayShift)
+      }
     }
 
     setTouchStartX(null)
@@ -1495,7 +1503,7 @@ function App() {
             )}
 
             {screen === 'monthly' && (
-              <section className="task-section monthly-section">
+              <section className="task-section monthly-section" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                 <div className="section-heading">
                   <h2>Monthly View</h2>
                   <span>{getMonthName(visibleMonth)}</span>

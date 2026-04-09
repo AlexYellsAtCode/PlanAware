@@ -290,9 +290,46 @@ function isSameDay(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
+function getRelativeDayLabel(date, referenceDate) {
+  const current = startOfDay(date)
+  const reference = startOfDay(referenceDate)
+  const millisPerDay = 24 * 60 * 60 * 1000
+  const dayDiff = Math.round((current.getTime() - reference.getTime()) / millisPerDay)
+
+  if (dayDiff === 0) return 'Today'
+  if (dayDiff === 1) return 'Tomorrow'
+  if (dayDiff === -1) return 'Yesterday'
+  if (dayDiff > 1 && dayDiff <= 6) return `In ${dayDiff} days`
+  if (dayDiff < -1 && dayDiff >= -6) return `${Math.abs(dayDiff)} days ago`
+  return ''
+}
+
 function getStartOfWeek(date) {
   const dayStart = startOfDay(date)
   return addDays(dayStart, -dayStart.getDay())
+}
+
+const SHORT_MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function formatShortMonthDay(date) {
+  return `${SHORT_MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
+}
+
+function formatWeekRange(date) {
+  const weekStart = getStartOfWeek(date)
+  const weekEnd = addDays(weekStart, 6)
+  const sameYear = weekStart.getFullYear() === weekEnd.getFullYear()
+  const sameMonth = sameYear && weekStart.getMonth() === weekEnd.getMonth()
+
+  if (sameMonth) {
+    return `${formatShortMonthDay(weekStart)} - ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`
+  }
+
+  if (sameYear) {
+    return `${formatShortMonthDay(weekStart)} - ${formatShortMonthDay(weekEnd)}, ${weekEnd.getFullYear()}`
+  }
+
+  return `${formatShortMonthDay(weekStart)}, ${weekStart.getFullYear()} - ${formatShortMonthDay(weekEnd)}, ${weekEnd.getFullYear()}`
 }
 
 function formatEventTime(event) {
@@ -392,6 +429,7 @@ function App() {
     month: '2-digit',
     day: '2-digit',
   })
+  const relativeDayLabel = getRelativeDayLabel(selectedDate, currentTime)
 
   useEffect(() => {
     const updateClock = () => setCurrentTime(new Date())
@@ -766,6 +804,14 @@ function App() {
     })
   }, [tasks, events, selectedDate])
 
+  const weeklyRangeLabel = useMemo(() => formatWeekRange(selectedDate), [selectedDate])
+  const isViewingCurrentWeek = useMemo(() => {
+    const selectedWeekStart = getStartOfWeek(selectedDate)
+    const currentWeekStart = getStartOfWeek(new Date())
+    return isSameDay(selectedWeekStart, currentWeekStart)
+  }, [selectedDate])
+  const weeklyHeaderLabel = isViewingCurrentWeek ? `${weeklyRangeLabel} (Current)` : weeklyRangeLabel
+
   const timelineScrollRef = useRef(null)
 
   useEffect(() => {
@@ -822,14 +868,14 @@ function App() {
   }
 
   function handleTouchStart(event) {
-    if (screen !== 'home') return
+    if (screen !== 'home' && screen !== 'weekly') return
     const touch = event.touches[0]
     setTouchStartX(touch.clientX)
     setTouchStartY(touch.clientY)
   }
 
   function handleTouchEnd(event) {
-    if (screen !== 'home' || touchStartX === null || touchStartY === null) return
+    if ((screen !== 'home' && screen !== 'weekly') || touchStartX === null || touchStartY === null) return
 
     const touch = event.changedTouches[0]
     const deltaX = touch.clientX - touchStartX
@@ -837,7 +883,8 @@ function App() {
     const horizontalThreshold = 50
 
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= horizontalThreshold) {
-      shiftSelectedDate(deltaX < 0 ? 1 : -1)
+      const dayShift = screen === 'weekly' ? 7 : 1
+      shiftSelectedDate(deltaX < 0 ? dayShift : -dayShift)
     }
 
     setTouchStartX(null)
@@ -1128,6 +1175,7 @@ function App() {
                 <div className="date-pill">
                   <span>{currentDay}</span>
                   <strong>{currentDate}</strong>
+                  {relativeDayLabel ? <span className="date-pill-relative">{relativeDayLabel}</span> : null}
                 </div>
                 <div className="hero-stats">
                   <div className="capacity-pill">
@@ -1323,10 +1371,10 @@ function App() {
             )}
 
             {screen === 'weekly' && (
-              <section className="task-section weekly-section">
+              <section className="task-section weekly-section" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                 <div className="section-heading">
                   <h2>Weekly View</h2>
-                  <span>{loading ? 'Loading…' : 'This Week'}</span>
+                  <span>{loading ? 'Loading…' : weeklyHeaderLabel}</span>
                 </div>
 
                 <div className="weekly-list">

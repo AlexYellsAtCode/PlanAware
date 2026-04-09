@@ -236,6 +236,14 @@ button {
   letter-spacing: 0.02em;
 }
 
+.date-pill-relative {
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.64);
+}
+
 .hero-stats > div,
 .compose-card,
 .task-item,

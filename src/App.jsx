@@ -182,23 +182,33 @@ function calculateCapacityWithEvents(tasks, events) {
   return Math.min(100, Math.round(capacityPercent))
 }
 
-function getTaskTimingBucket(task) {
+function getTaskTimingBucket(task, anchorDate) {
   const dueDate = parseDueDateTime(String(task.due || ''))
-  return getRelativeTimingBucket(dueDate)
+  return getRelativeTimingBucket(dueDate, anchorDate)
 }
 
-function getRelativeTimingBucket(dateValue) {
+function getRelativeTimingBucket(dateValue, anchorDate) {
   if (Number.isNaN(dateValue.getTime())) return 'this-week'
 
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const dueDay = new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate())
+  const anchorDay = new Date(
+    anchorDate.getFullYear(),
+    anchorDate.getMonth(),
+    anchorDate.getDate()
+  )
+
+  const targetDay = new Date(
+    dateValue.getFullYear(),
+    dateValue.getMonth(),
+    dateValue.getDate()
+  )
+
   const millisPerDay = 24 * 60 * 60 * 1000
-  const dayDiff = Math.round((dueDay.getTime() - today.getTime()) / millisPerDay)
+  const dayDiff = Math.round((targetDay.getTime() - anchorDay.getTime()) / millisPerDay)
 
   if (dayDiff === 0) return 'today'
   if (dayDiff === 1) return 'tomorrow'
-  return 'this-week'
+  if (dayDiff >= 2 && dayDiff <= 6) return 'this-week'
+  return 'outside-week'
 }
 
 function parseDueDateTime(dueString) {
@@ -559,17 +569,20 @@ function App() {
     ]
 
     searchedAndSortedTasks.forEach((task) => {
+      const bucketName = getTaskTimingBucket(task, selectedDate)
+      if (bucketName === 'outside-week') return
+
       const bucket =
-        getTaskTimingBucket(task) === 'tomorrow'
+        bucketName === 'tomorrow'
           ? buckets[1]
-          : getTaskTimingBucket(task) === 'this-week'
+          : bucketName === 'this-week'
             ? buckets[2]
             : buckets[0]
       bucket.tasks.push(task)
     })
 
     return buckets
-  }, [searchedAndSortedTasks])
+  }, [searchedAndSortedTasks, selectedDate])
 
   const weeklyEventBuckets = useMemo(() => {
     const buckets = [
@@ -580,17 +593,20 @@ function App() {
 
     filteredEvents.forEach((event) => {
       const eventDate = new Date(`${event.date}T00:00:00`)
+      const bucketName = getRelativeTimingBucket(eventDate, selectedDate)
+      if (bucketName === 'outside-week') return
+
       const bucket =
-        getRelativeTimingBucket(eventDate) === 'tomorrow'
+        bucketName === 'tomorrow'
           ? buckets[1]
-          : getRelativeTimingBucket(eventDate) === 'this-week'
+          : bucketName === 'this-week'
             ? buckets[2]
             : buckets[0]
       bucket.events.push(event)
     })
 
     return buckets
-  }, [filteredEvents])
+  }, [filteredEvents, selectedDate])
 
   const timeline = useMemo(() => {
     const intervalMinutes = 15
@@ -815,6 +831,7 @@ function App() {
   function getMonthName(date) {
     return date.toLocaleString('default', { month: 'long', year: 'numeric' })
   }
+
 
 
   function goToPreviousMonth() {

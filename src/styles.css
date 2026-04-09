@@ -402,6 +402,7 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
+  margin-top: -10px;
 }
 
 .timeline-section {
@@ -430,6 +431,7 @@ button {
   position: relative;
   width: 1440px;
   padding-top: 18px;
+  padding-bottom: 10px;
 }
 
 .timeline-label-row {
@@ -488,13 +490,13 @@ button {
 
 .timeline-now-line {
   position: absolute;
-  top: 32px;
-  bottom: -10px;
+  top: 30px;
+  bottom: 8px;
   width: 2px;
   transform: translateX(-50%);
   background: linear-gradient(180deg, rgba(59, 130, 246, 0.15), #3b82f6 18%, #60a5fa 82%, rgba(59, 130, 246, 0.15));
   z-index: 4;
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35), 0 0 10px rgba(59, 130, 246, 0.45);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.18), 0 0 2px rgba(59, 130, 246, 0.18);
   pointer-events: none;
 }
 
@@ -513,11 +515,11 @@ button {
 .timeline-now-line::after {
   content: '▲';
   position: absolute;
-  bottom: -2px;
+  bottom: -3px;
   left: 50%;
   transform: translateX(-50%);
   color: #3b82f6;
-  font-size: 0.72rem;
+  font-size: 0.50rem;
   line-height: 1;
   text-shadow: 0 0 6px rgba(59, 130, 246, 0.55);
 }

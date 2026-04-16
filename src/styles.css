@@ -581,41 +581,98 @@ button {
   line-height: 1;
 }
 
-.search-tools-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  border-radius: 18px;
-  padding: 0 10px;
-  height: 46px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(15, 23, 42, 0.56);
-  backdrop-filter: blur(10px);
+.search-sort-wrapper {
+  position: relative;
+  justify-self: end;
+  width: 46px;
 }
 
-.search-icon-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+.search-sort-btn {
+  width: 100%;
+  height: 46px;
+  border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.24);
   background: rgba(30, 41, 59, 0.82);
   color: rgba(226, 232, 240, 0.92);
   display: grid;
   place-items: center;
-  font-size: 0.88rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   line-height: 1;
   padding: 0;
 }
 
-.search-icon-symbol {
-  width: 14px;
-  height: 14px;
-  display: block;
+.search-sort-btn:hover {
+  background: rgba(51, 65, 85, 0.92);
 }
 
-.search-icon-btn:hover {
-  background: rgba(51, 65, 85, 0.92);
+.search-sort-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: max-content;
+  min-width: 0;
+  max-height: min(360px, calc(100vh - 180px));
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(30, 41, 59, 0.98);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+  display: grid;
+  gap: 8px;
+}
+
+.search-sort-group {
+  display: grid;
+  gap: 6px;
+}
+
+.search-sort-group-title {
+  padding: 0 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.search-sort-group-options {
+  display: grid;
+  grid-template-columns: repeat(2, 34px);
+  justify-content: start;
+  gap: 6px;
+}
+
+.search-sort-option {
+  width: 34px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  min-height: 34px;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.4);
+  color: rgba(226, 232, 240, 0.92);
+  text-align: center;
+  justify-items: center;
+  align-items: center;
+  gap: 0;
+  display: grid;
+}
+
+.search-sort-option:hover {
+  background: rgba(51, 65, 85, 0.6);
+}
+
+.search-sort-option[aria-selected="true"] {
+  border-color: rgba(148, 163, 184, 0.42);
+  background: rgba(51, 65, 85, 0.9);
+}
+
+.search-sort-option-icon {
+  font-size: 0.92rem;
+  line-height: 1;
+  color: #93c5fd;
 }
 
 .search-bar input,

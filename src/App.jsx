@@ -315,6 +315,132 @@ function getRelativeDayLabel(date, referenceDate) {
   return ''
 }
 
+
+const TASK_SORT_GROUPS = [
+  {
+    label: 'Due date',
+    options: [
+      { value: 'due-asc', label: 'Increasing', detail: 'Soonest first', icon: '↑' },
+      { value: 'due-desc', label: 'Decreasing', detail: 'Most distant first', icon: '↓' },
+    ],
+  },
+  {
+    label: 'Priority',
+    options: [
+      { value: 'priority-desc', label: 'Increasing', detail: 'High to low', icon: '↑' },
+      { value: 'priority-asc', label: 'Decreasing', detail: 'Low to high', icon: '↓' },
+    ],
+  },
+  {
+    label: 'Title',
+    options: [
+      { value: 'title-asc', label: 'Increasing', detail: 'A to Z', icon: '↑' },
+      { value: 'title-desc', label: 'Decreasing', detail: 'Z to A', icon: '↓' },
+    ],
+  },
+  {
+    label: 'Estimated time',
+    options: [
+      { value: 'effort-asc', label: 'Increasing', detail: 'Shortest first', icon: '↑' },
+      { value: 'effort-desc', label: 'Decreasing', detail: 'Longest first', icon: '↓' },
+    ],
+  },
+  {
+    label: 'Difficulty',
+    options: [
+      { value: 'difficulty-asc', label: 'Increasing', detail: 'Easiest first', icon: '↑' },
+      { value: 'difficulty-desc', label: 'Decreasing', detail: 'Hardest first', icon: '↓' },
+    ],
+  },
+]
+
+const TASK_SORT_OPTIONS = TASK_SORT_GROUPS.flatMap((group) =>
+  group.options.map((option) => ({ ...option, groupLabel: group.label }))
+)
+
+function getSortOptionMeta(sortOption) {
+  return TASK_SORT_OPTIONS.find((option) => option.value === sortOption)
+}
+
+function getSortOptionLabel(sortOption) {
+  return getSortOptionMeta(sortOption)?.groupLabel || 'Sort tasks'
+}
+
+function getSortOptionSummary(sortOption) {
+  const option = getSortOptionMeta(sortOption)
+  if (!option) return 'Sort tasks'
+  return `${option.groupLabel}, ${option.detail.toLowerCase()}`
+}
+
+function compareTasks(a, b, sortOption) {
+  if (a.completed !== b.completed) {
+    return a.completed ? 1 : -1
+  }
+
+  const aTitle = String(a.title || '')
+  const bTitle = String(b.title || '')
+  const aTime = parseDueDateTime(a.due).getTime()
+  const bTime = parseDueDateTime(b.due).getTime()
+
+  switch (sortOption) {
+    case 'priority-asc': {
+      const priorityDifference = getPriorityValue(a.priority) - getPriorityValue(b.priority)
+      if (priorityDifference !== 0) return priorityDifference
+      if (aTime !== bTime) return aTime - bTime
+      return aTitle.localeCompare(bTitle)
+    }
+    case 'priority-desc': {
+      const priorityDifference = getPriorityValue(b.priority) - getPriorityValue(a.priority)
+      if (priorityDifference !== 0) return priorityDifference
+      if (aTime !== bTime) return aTime - bTime
+      return aTitle.localeCompare(bTitle)
+    }
+    case 'title-asc': {
+      const titleDifference = aTitle.localeCompare(bTitle)
+      if (titleDifference !== 0) return titleDifference
+      if (aTime !== bTime) return aTime - bTime
+      return getPriorityValue(b.priority) - getPriorityValue(a.priority)
+    }
+    case 'title-desc': {
+      const titleDifference = bTitle.localeCompare(aTitle)
+      if (titleDifference !== 0) return titleDifference
+      if (aTime !== bTime) return aTime - bTime
+      return getPriorityValue(b.priority) - getPriorityValue(a.priority)
+    }
+    case 'effort-asc': {
+      const effortDifference = (Number(a.estimatedMinutes) || 0) - (Number(b.estimatedMinutes) || 0)
+      if (effortDifference !== 0) return effortDifference
+      if (aTime !== bTime) return aTime - bTime
+      return aTitle.localeCompare(bTitle)
+    }
+    case 'effort-desc': {
+      const effortDifference = (Number(b.estimatedMinutes) || 0) - (Number(a.estimatedMinutes) || 0)
+      if (effortDifference !== 0) return effortDifference
+      if (aTime !== bTime) return aTime - bTime
+      return aTitle.localeCompare(bTitle)
+    }
+    case 'difficulty-asc': {
+      const difficultyDifference = (Number(a.difficulty) || 0) - (Number(b.difficulty) || 0)
+      if (difficultyDifference !== 0) return difficultyDifference
+      if (aTime !== bTime) return aTime - bTime
+      return aTitle.localeCompare(bTitle)
+    }
+    case 'difficulty-desc': {
+      const difficultyDifference = (Number(b.difficulty) || 0) - (Number(a.difficulty) || 0)
+      if (difficultyDifference !== 0) return difficultyDifference
+      if (aTime !== bTime) return aTime - bTime
+      return aTitle.localeCompare(bTitle)
+    }
+    case 'due-desc': {
+      if (aTime !== bTime) return bTime - aTime
+      return getPriorityValue(b.priority) - getPriorityValue(a.priority)
+    }
+    case 'due-asc':
+    default:
+      if (aTime !== bTime) return aTime - bTime
+      return getPriorityValue(b.priority) - getPriorityValue(a.priority)
+  }
+}
 function getStartOfWeek(date) {
   const dayStart = startOfDay(date)
   return addDays(dayStart, -dayStart.getDay())
@@ -574,11 +700,14 @@ function App() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
+  const [sortMenuOpen, setSortMenuOpen] = useState(false)
+  const [taskSortOption, setTaskSortOption] = useState('due-asc')
   const [touchStartX, setTouchStartX] = useState(null)
   const [touchStartY, setTouchStartY] = useState(null)
   const [query, setQuery] = useState('')
   const [form, setForm] = useState(createDefaultForm)
   const [eventForm, setEventForm] = useState(createDefaultEventForm)
+  const sortMenuRef = useRef(null)
 
   useEffect(() => {
     let active = true
@@ -594,6 +723,29 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!sortMenuOpen) return
+
+    function handlePointerDown(event) {
+      if (sortMenuRef.current && sortMenuRef.current.contains(event.target)) return
+      setSortMenuOpen(false)
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setSortMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [sortMenuOpen])
+
   const searchedAndSortedTasks = useMemo(() => {
     const normalized = query.toLowerCase().trim()
     const filtered = !normalized ? tasks : tasks.filter((task) =>
@@ -601,18 +753,8 @@ function App() {
         value.toLowerCase().includes(normalized),
       ),
     )
-    return filtered.sort((a, b) => {
-      if (a.completed === b.completed) {
-        const aTime = parseDueDateTime(a.due).getTime()
-        const bTime = parseDueDateTime(b.due).getTime()
-        if (aTime === bTime) {
-          return getPriorityValue(b.priority) - getPriorityValue(a.priority)
-        }
-        return aTime - bTime
-      }
-      return a.completed ? 1 : -1
-    })
-  }, [query, tasks])
+    return [...filtered].sort((a, b) => compareTasks(a, b, taskSortOption))
+  }, [query, taskSortOption, tasks])
 
   const dailyTasks = useMemo(() => {
     return searchedAndSortedTasks.filter((task) => {
@@ -629,7 +771,7 @@ function App() {
           [event.title, event.notes, event.location, event.date, formatEventTime(event), getRepeatSummary(event)].some((value) => String(value || '').toLowerCase().includes(normalized)),
         )
 
-    return filtered.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       if (a.date === b.date) {
         const aTime = `${normalizeHourInput(a.startHour)}:${normalizeMinuteInput(a.startMinute)} ${a.startPeriod}`
         const bTime = `${normalizeHourInput(b.startHour)}:${normalizeMinuteInput(b.startMinute)} ${b.startPeriod}`
@@ -1297,15 +1439,48 @@ function App() {
                       placeholder="Search"
                     />
                   </div>
-                  <div className="search-tools-pill" aria-label="Search controls">
-                    <button type="button" className="search-icon-btn" aria-label="Filter tasks" title="Filter">
-                      <svg className="search-icon-symbol" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="currentColor" />
-                      </svg>
-                    </button>
-                    <button type="button" className="search-icon-btn" aria-label="Sort tasks" title="Sort">
+                  <div className="search-sort-wrapper" ref={sortMenuRef}>
+                    <button
+                      type="button"
+                      className="search-sort-btn"
+                      aria-label={`Sort tasks, currently ${getSortOptionSummary(taskSortOption)}`}
+                      aria-haspopup="listbox"
+                      aria-expanded={sortMenuOpen}
+                      title={getSortOptionSummary(taskSortOption)}
+                      onClick={() => setSortMenuOpen((current) => !current)}
+                    >
                       ⇅
                     </button>
+                    {sortMenuOpen && (
+                      <div className="search-sort-menu" role="listbox" aria-label="Task sort options">
+                        {TASK_SORT_GROUPS.map((group) => (
+                          <div key={group.label} className="search-sort-group">
+                            <div className="search-sort-group-title">{group.label}</div>
+                            <div className="search-sort-group-options">
+                              {group.options.map((option) => (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  className="search-sort-option"
+                                  role="option"
+                                  aria-selected={taskSortOption === option.value}
+                                  aria-label={`${group.label}, ${option.label.toLowerCase()} (${option.detail.toLowerCase()})`}
+                                  title={`${group.label}, ${option.label.toLowerCase()} (${option.detail.toLowerCase()})`}
+                                  onClick={() => {
+                                    setTaskSortOption(option.value)
+                                    setSortMenuOpen(false)
+                                  }}
+                                >
+                                  <span className="search-sort-option-icon" aria-hidden="true">
+                                    {option.icon}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

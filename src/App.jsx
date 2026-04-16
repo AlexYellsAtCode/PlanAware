@@ -494,6 +494,36 @@ const WEEKDAY_OPTIONS = [
   { value: 6, label: 'S' },
 ]
 
+const CATEGORY_OPTIONS = [
+  { value: 'work', label: 'Work', colorLabel: 'Blue', shapeLabel: 'Circle', shapeClass: 'shape-circle' },
+  { value: 'personal', label: 'Personal', colorLabel: 'Pink', shapeLabel: 'Square', shapeClass: 'shape-square' },
+  { value: 'health', label: 'Health', colorLabel: 'Green', shapeLabel: 'Triangle', shapeClass: 'shape-triangle' },
+  { value: 'learning', label: 'Learning', colorLabel: 'Amber', shapeLabel: 'Diamond', shapeClass: 'shape-diamond' },
+]
+
+function getCategoryOption(categoryValue) {
+  return CATEGORY_OPTIONS.find((option) => option.value === categoryValue) || CATEGORY_OPTIONS[0]
+}
+
+function getCategoryLegendLabel(categoryValue) {
+  const category = getCategoryOption(categoryValue)
+  return `${category.colorLabel} ${category.shapeLabel}`
+}
+
+function renderCategoryIndicator(categoryValue, placementClass = '') {
+  const category = getCategoryOption(categoryValue)
+  const indicatorLabel = `${category.label}: ${getCategoryLegendLabel(categoryValue)}`
+
+  return (
+    <span
+      className={`category-indicator category-${category.value} ${category.shapeClass} ${placementClass}`.trim()}
+      role="img"
+      aria-label={indicatorLabel}
+      title={indicatorLabel}
+    />
+  )
+}
+
 function normalizeRepeatDays(days) {
   if (!Array.isArray(days)) return []
   return [...new Set(days.map((day) => Number(day)).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))].sort((a, b) => a - b)
@@ -1449,7 +1479,16 @@ function App() {
                       title={getSortOptionSummary(taskSortOption)}
                       onClick={() => setSortMenuOpen((current) => !current)}
                     >
-                      ⇅
+                      <span className="search-sort-icon" aria-hidden="true">
+                        <svg className="search-sort-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M2 5H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M2 10H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M2 15H10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M2 20H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M19 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M15.5 16.5L19 20L22.5 16.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
                     </button>
                     {sortMenuOpen && (
                       <div className="search-sort-menu" role="listbox" aria-label="Task sort options">
@@ -1528,6 +1567,7 @@ function App() {
                           {getRepeatSummary(task) ? <div className="task-meta-line">{getRepeatSummary(task)}</div> : null}
                           <div className="task-meta-line">{task.estimatedMinutes} min · Diff {task.difficulty}/5</div>
                         </div>
+                        {renderCategoryIndicator(task.category || 'work', 'pill-corner')}
                       </article>
                     ))
                   ) : (
@@ -1544,30 +1584,42 @@ function App() {
                   {loading ? (
                     <div className="empty-state">Loading your events…</div>
                   ) : dailyEvents.length ? (
-                    dailyEvents.map((event) => (
-                      <article
-                        key={event.id}
-                        className={`event-item editable category-${event.category || 'work'}`}
-                        onClick={() => openEventEditor(event)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(eventKey) => {
-                          if (eventKey.key === 'Enter' || eventKey.key === ' ') {
-                            eventKey.preventDefault()
-                            openEventEditor(event)
-                          }
-                        }}
-                        aria-label={`Edit ${event.title}`}
-                      >
-                        <div className="event-time">{formatEventTime(event)}</div>
-                        <div className="event-copy">
-                          <h3>{event.title}</h3>
-                          <p>{event.location}</p>
-                          {getRepeatSummary(event) ? <p>{getRepeatSummary(event)}</p> : null}
-                          <p>{event.notes}</p>
-                        </div>
-                      </article>
-                    ))
+                    dailyEvents.map((event) => {
+                      const repeatSummary = getRepeatSummary(event)
+                      const hasLocation = Boolean(String(event.location || '').trim())
+                      const hasRepeat = Boolean(String(repeatSummary || '').trim())
+                      const hasNotes = Boolean(String(event.notes || '').trim())
+
+                      return (
+                        <article
+                          key={event.id}
+                          className={`event-item editable category-${event.category || 'work'}`}
+                          onClick={() => openEventEditor(event)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(eventKey) => {
+                            if (eventKey.key === 'Enter' || eventKey.key === ' ') {
+                              eventKey.preventDefault()
+                              openEventEditor(event)
+                            }
+                          }}
+                          aria-label={`Edit ${event.title}`}
+                        >
+                          <div className="event-time">{formatEventTime(event)}</div>
+                          <div className="event-copy">
+                            <div className="event-topline">
+                              <h3>{event.title}</h3>
+                            </div>
+                            <div className="event-detail-list">
+                              {hasLocation ? <p className="event-detail-line">{event.location}</p> : null}
+                              {hasRepeat ? <p className="event-detail-line">{repeatSummary}</p> : null}
+                              {hasNotes ? <p className="event-detail-line">{event.notes}</p> : null}
+                            </div>
+                          </div>
+                          {renderCategoryIndicator(event.category || 'work', 'pill-corner')}
+                        </article>
+                      )
+                    })
                   ) : (
                     <div className="empty-state">No events scheduled for this day.</div>
                   )}
@@ -1608,31 +1660,42 @@ function App() {
                           {!isCollapsed && (
                             <div className="weekly-items">
                               {eventBucket?.events.length ? (
-                                eventBucket.events.map((event) => (
-                                  <div
-                                    key={`event-${event.id}`}
-                                    className={`weekly-event editable category-${event.category || 'work'}`}
-                                    onClick={() => openEventEditor(event)}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(eventKey) => {
-                                      if (eventKey.key === 'Enter' || eventKey.key === ' ') {
-                                        eventKey.preventDefault()
-                                        openEventEditor(event)
-                                      }
-                                    }}
-                                    aria-label={`Edit ${event.title}`}
-                                  >
-                                    <div style={{ width: '100%' }}>
-                                      <div className="task-topline">
-                                        <strong>{event.title}</strong>
+                                eventBucket.events.map((event) => {
+                                  const repeatSummary = getRepeatSummary(event)
+                                  const hasLocation = Boolean(String(event.location || '').trim())
+                                  const hasRepeat = Boolean(String(repeatSummary || '').trim())
+                                  const hasNotes = Boolean(String(event.notes || '').trim())
+
+                                  return (
+                                    <div
+                                      key={`event-${event.id}`}
+                                      className={`weekly-event editable category-${event.category || 'work'}`}
+                                      onClick={() => openEventEditor(event)}
+                                      role="button"
+                                      tabIndex={0}
+                                      onKeyDown={(eventKey) => {
+                                        if (eventKey.key === 'Enter' || eventKey.key === ' ') {
+                                          eventKey.preventDefault()
+                                          openEventEditor(event)
+                                        }
+                                      }}
+                                      aria-label={`Edit ${event.title}`}
+                                    >
+                                      <div className="event-copy">
+                                        <div className="event-time">{formatEventTime(event)}</div>
+                                        <div className="event-topline">
+                                          <strong>{event.title}</strong>
+                                        </div>
+                                        <div className="event-detail-list">
+                                          {hasLocation ? <p className="event-detail-line">{event.location}</p> : null}
+                                          {hasRepeat ? <p className="event-detail-line">{repeatSummary}</p> : null}
+                                          {hasNotes ? <p className="event-detail-line">{event.notes}</p> : null}
+                                        </div>
                                       </div>
-                                      <p>{formatDateForDisplay(event.date)}</p>
-                                      {getRepeatSummary(event) ? <p>{getRepeatSummary(event)}</p> : null}
-                                      <p>{formatEventTime(event)} · {event.location}</p>
+                                      {renderCategoryIndicator(event.category || 'work', 'pill-corner')}
                                     </div>
-                                  </div>
-                                ))
+                                  )
+                                })
                               ) : null}
                     
                               {bucket.tasks.length ? (
@@ -1660,6 +1723,7 @@ function App() {
                                       {getRepeatSummary(task) ? <p>{getRepeatSummary(task)}</p> : null}
                                       <p>{task.estimatedMinutes} min · Diff {task.difficulty}/5</p>
                                     </div>
+                                    {renderCategoryIndicator(task.category || 'work', 'pill-corner')}
                                   </div>
                                 ))
                               ) : (
@@ -1813,30 +1877,37 @@ function App() {
                   <div className="compose-field">
                     <span className="compose-label">Category</span>
                     <div className="category-dropdown-wrapper">
+                      {(() => {
+                        const selectedCategory = getCategoryOption(form.category)
+                        return (
                       <button
                         type="button"
                         className={`category-pill category-${form.category}`}
                         onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                         aria-haspopup="listbox"
                         aria-expanded={categoryDropdownOpen}
+                        aria-label={`Task category: ${selectedCategory.label} (${selectedCategory.colorLabel} ${selectedCategory.shapeLabel})`}
                       >
-                        <span className="category-color-dot" />
+                        <span className={`category-color-dot ${selectedCategory.shapeClass}`} />
                       </button>
+                        )
+                      })()}
                       {categoryDropdownOpen && (
                         <div className="category-dropdown-menu">
-                          {['work', 'personal', 'health', 'learning'].map((cat) => (
+                          {CATEGORY_OPTIONS.map((cat) => (
                             <button
-                              key={`cat-${cat}`}
+                              key={`cat-${cat.value}`}
                               type="button"
-                              className={`category-dropdown-option category-${cat}`}
+                              className={`category-dropdown-option category-${cat.value}`}
                               onClick={() => {
-                                setForm((current) => ({ ...current, category: cat }))
+                                setForm((current) => ({ ...current, category: cat.value }))
                                 setCategoryDropdownOpen(false)
                               }}
                               role="option"
-                              aria-selected={form.category === cat}
+                              aria-selected={form.category === cat.value}
+                              aria-label={`${cat.label}: ${cat.colorLabel} ${cat.shapeLabel}`}
                             >
-                              <span className="dropdown-color-dot" />
+                              <span className={`dropdown-color-dot ${cat.shapeClass}`} />
                             </button>
                           ))}
                         </div>
@@ -2002,30 +2073,37 @@ function App() {
                     <div className="compose-field">
                       <span className="compose-label">Category</span>
                       <div className="category-dropdown-wrapper">
+                        {(() => {
+                          const selectedCategory = getCategoryOption(eventForm.category)
+                          return (
                         <button
                           type="button"
                           className={`category-pill category-${eventForm.category}`}
                           onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
                           aria-haspopup="listbox"
                           aria-expanded={categoryDropdownOpen}
+                          aria-label={`Event category: ${selectedCategory.label} (${selectedCategory.colorLabel} ${selectedCategory.shapeLabel})`}
                         >
-                          <span className="category-color-dot" />
+                          <span className={`category-color-dot ${selectedCategory.shapeClass}`} />
                         </button>
+                          )
+                        })()}
                         {categoryDropdownOpen && (
                           <div className="category-dropdown-menu">
-                            {['work', 'personal', 'health', 'learning'].map((cat) => (
+                            {CATEGORY_OPTIONS.map((cat) => (
                               <button
-                                key={`event-cat-${cat}`}
+                                key={`event-cat-${cat.value}`}
                                 type="button"
-                                className={`category-dropdown-option category-${cat}`}
+                                className={`category-dropdown-option category-${cat.value}`}
                                 onClick={() => {
-                                  setEventForm((current) => ({ ...current, category: cat }))
+                                  setEventForm((current) => ({ ...current, category: cat.value }))
                                   setCategoryDropdownOpen(false)
                                 }}
                                 role="option"
-                                aria-selected={eventForm.category === cat}
+                                aria-selected={eventForm.category === cat.value}
+                                aria-label={`${cat.label}: ${cat.colorLabel} ${cat.shapeLabel}`}
                               >
-                                <span className="dropdown-color-dot" />
+                                <span className={`dropdown-color-dot ${cat.shapeClass}`} />
                               </button>
                             ))}
                           </div>

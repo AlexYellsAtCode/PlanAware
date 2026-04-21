@@ -75,6 +75,38 @@ The current implementation focuses on planning and workload awareness with:
 - `npm run dev` - Start Vite dev server
 - `npm run build` - Build production assets
 - `npm run preview` - Preview production build locally
+- `npm run deploy` - Build and publish `dist` to the `gh-pages` branch
+
+## Deploying to GitHub Pages
+
+This project is configured for GitHub Pages hosting.
+
+### One-time GitHub setup
+
+1. Push your latest changes to `main`.
+2. In GitHub, open your repository settings:
+	- **Settings** -> **Pages**
+3. Under **Build and deployment**:
+	- **Source**: `Deploy from a branch`
+	- **Branch**: `gh-pages`
+	- **Folder**: `/ (root)`
+
+### Publish updates
+
+From the project root, run:
+
+```bash
+npm run deploy
+```
+
+This will:
+
+1. Run the production build (`predeploy` -> `npm run build`)
+2. Publish the `dist` output to the `gh-pages` branch
+
+Live site URL:
+
+- https://alexyellsatcode.github.io/PlanAware/
 
 ## Project Structure
 

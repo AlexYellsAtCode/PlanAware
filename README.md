@@ -95,8 +95,3 @@ The current implementation focuses on planning and workload awareness with:
 - Data is stored in memory only and resets on refresh/restart.
 - Backend calls are simulated with delayed promises to mimic network behavior.
 - The package name currently remains `functional-prototype`; this does not affect runtime behavior.
-
-## To-Do List
-- Remove Filter button (since Search duplicates functionality)
-- Implement sorting options for Sort button
-- Add overdue task indicator (perhaps red outline?)

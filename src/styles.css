@@ -1668,7 +1668,7 @@ button {
   display: block;
   font-size: 2rem;
   line-height: 1;
-  transform: translateY(-4px);
+  transform: translateY(-1px);
 }
 
 .composer-backdrop {
@@ -1722,7 +1722,7 @@ button {
 .sheet-close-icon {
   display: inline-block;
   line-height: 1;
-  transform: translateY(-2px);
+  transform: translateY(-0px);
 }
 
 .bottom-nav {

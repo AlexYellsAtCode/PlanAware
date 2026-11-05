@@ -1,108 +1,98 @@
 # Documentation Index
 
-Welcome to PlanAware Documentation! This folder contains comprehensive guides to help you understand, develop, and maintain the project.
+Welcome to PlanAware Documentation! This folder contains comprehensive guides organized by topic to help you understand, develop, and maintain the project.
 
-## 📖 Documentation Files
+## 📁 Documentation Directories
 
-### 1. **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** ⭐ Start Here
-Quick overview of commands, state variables, and common patterns. Best for quick lookups and refreshing your memory.
+### 📘 [guides/](./guides/) - Getting Started & Development
+Your starting point for setup and day-to-day development.
 
 **Contains**:
-- 5-minute quick start
-- Common commands
-- Key file locations
-- State and data structures
-- Debugging tips
-- Known limitations
+- [QUICK_REFERENCE.md](./guides/QUICK_REFERENCE.md) ⭐ - Quick command lookup and state overview
+- [DEVELOPER_GUIDE.md](./guides/DEVELOPER_GUIDE.md) - Installation, setup, and development workflow
 
 ---
 
-### 2. **[ARCHITECTURE.md](./ARCHITECTURE.md)**
-Deep dive into the system design, how components work together, and the overall structure of the application.
+### 🎬 [demo/](./demo/) - Demo Mode & Testing
+Setup and usage of demo mode with sample seed data.
 
 **Contains**:
-- Technology stack
-- Core architecture (state management, data model)
-- Data models for tasks and events
-- Fake backend design
-- View descriptions (Home, Weekly, Monthly)
-- Capacity calculation formula
-- Component flow diagram
-- Performance considerations
+- [DEMO_MODE.md](./demo/DEMO_MODE.md) - Complete guide to running with sample data
+- [README.md](./demo/README.md) - Demo directory index
 
 ---
 
-### 3. **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)**
-Step-by-step guide for developers making changes to the codebase.
+### 🏗️ [design/](./design/) - Architecture & Data
+System design and technical specifications.
 
 **Contains**:
-- Installation and setup instructions
-- Development workflow and scripts
-- Key concepts explanation
-- Code examples for common tasks
-- How to add new features
-- Debugging techniques
-- Common tasks and how to implement them
-- Troubleshooting development issues
+- [ARCHITECTURE.md](./design/ARCHITECTURE.md) - System design and component structure
+- [DATA_MODEL.md](./design/DATA_MODEL.md) - Data structures and specifications
+- [README.md](./design/README.md) - Design directory index
 
 ---
 
-### 4. **[DATA_MODEL.md](./DATA_MODEL.md)**
-Complete specification of data structures, validation rules, and the capacity model.
+### ✨ [features/](./features/) - Feature Descriptions
+What PlanAware can do and how to use it.
 
 **Contains**:
-- Task data model with all fields
-- Event data model with all fields
-- Recurrence types and behavior
-- Capacity calculation model
-- Validation rules
-- API response formats
-- Category taxonomy
-- Examples of tasks and events
+- [FEATURES.md](./features/FEATURES.md) - Feature descriptions and use cases
+- [README.md](./features/README.md) - Features directory index
 
 ---
 
-### 5. **[FEATURES.md](./FEATURES.md)**
-Detailed descriptions of all features, use cases, and user interactions.
+### 🔧 [reference/](./reference/) - Troubleshooting & Support
+Solutions for problems and debugging guidance.
 
 **Contains**:
-- Task management features (create, edit, complete, delete)
-- Event management features
-- Planning views (Daily, Weekly, Monthly)
-- Recurring items explanation
-- Navigation and interaction patterns
-- Data visualization features
-- Real-world use case scenarios
-- Future feature ideas
+- [TROUBLESHOOTING.md](./reference/TROUBLESHOOTING.md) - Common issues and solutions
+- [README.md](./reference/README.md) - Reference directory index
 
 ---
 
-### 6. **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)**
-Solutions for common issues and problems you might encounter.
-
-**Contains**:
-- Development setup issues
-- Runtime issues (data not appearing, etc.)
-- Styling problems
-- Build and deployment issues
-- Performance debugging
-- Data persistence issues
-- Error messages and solutions
-- Getting help checklist
-- Common commands for debugging
-
----
-
-## 🎯 How to Use This Documentation
+## 🎯 Quick Navigation by Need
 
 ### I want to...
 
-- **Get started quickly** → Read [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
-- **Understand the codebase** → Start with [ARCHITECTURE.md](./ARCHITECTURE.md)
-- **Make code changes** → Follow [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
-- **Learn about data structures** → See [DATA_MODEL.md](./DATA_MODEL.md)
-- **Understand what features exist** → Check [FEATURES.md](./FEATURES.md)
-- **Fix a problem** → Look in [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+| Need | Go To |
+|------|-------|
+| **Get started quickly** | [guides/QUICK_REFERENCE.md](./guides/QUICK_REFERENCE.md) ⭐ |
+| **Set up development** | [guides/DEVELOPER_GUIDE.md](./guides/DEVELOPER_GUIDE.md) |
+| **Run with demo data** | [demo/DEMO_MODE.md](./demo/DEMO_MODE.md) |
+| **Understand the system** | [design/ARCHITECTURE.md](./design/ARCHITECTURE.md) |
+| **Learn data structures** | [design/DATA_MODEL.md](./design/DATA_MODEL.md) |
+| **Explore features** | [features/FEATURES.md](./features/FEATURES.md) |
+| **Fix a problem** | [reference/TROUBLESHOOTING.md](./reference/TROUBLESHOOTING.md) |
+
+## 📊 Quick Project Overview
+
+**PlanAware** is a productivity app that combines tasks and calendar events in an integrated interface.
+
+### Key Facts:
+- **Framework**: React 18 with Vite
+- **Storage**: In-memory (no persistence yet)
+- **Views**: Daily (timeline), Weekly (buckets), Monthly (heatmap)
+- **Features**: Create/edit/delete tasks & events, recurring items, capacity visualization
+- **Deployment**: GitHub Pages
+
+### Technology Stack:
+```
+Frontend: React 18
+Build: Vite 8
+Styling: Plain CSS
+State: React hooks (useState, useEffect, useMemo)
+Backend: Simulated (in-memory)
+Hosting: GitHub Pages
+```
+
+## 🚀 Common Workflows
+
+### Start Development
+```bash
+npm install
+npm run dev
+# Open http://localhost:5173/PlanAware/
+```
 
 ## 📊 Quick Project Overview
 

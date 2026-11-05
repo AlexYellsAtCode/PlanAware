@@ -15,11 +15,15 @@ npm run dev
 ## Common Commands
 
 ```bash
-npm run dev       # Start development server (with hot reload)
-npm run build     # Build for production (creates dist/ folder)
-npm run preview   # Preview production build locally
-npm run deploy    # Build and deploy to GitHub Pages
+npm run dev        # Start development server with empty data
+npm run demo       # Start development server with sample seed data
+npm run build      # Build for production with empty data
+npm run build:demo # Build production version with sample seed data
+npm run preview    # Preview production build locally
+npm run deploy     # Build and deploy to GitHub Pages
 ```
+
+**Tip**: Use `npm run demo` to explore the app with sample tasks and events pre-loaded. See [../demo/DEMO_MODE.md](../demo/DEMO_MODE.md) for details.
 
 ## Key Files
 

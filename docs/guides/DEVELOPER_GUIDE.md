@@ -33,11 +33,15 @@ npm run dev
 ### Available Scripts
 
 ```bash
-npm run dev      # Start Vite dev server with hot module replacement
-npm run build    # Create production build in dist/
-npm run preview  # Serve the production build locally
-npm run deploy   # Build and deploy to GitHub Pages (gh-pages branch)
+npm run dev       # Start Vite dev server with hot module replacement (empty data)
+npm run demo      # Start dev server with sample seed data loaded
+npm run build     # Create production build in dist/ (empty data)
+npm run build:demo # Create production build with sample seed data
+npm run preview   # Serve the production build locally
+npm run deploy    # Build and deploy to GitHub Pages (gh-pages branch)
 ```
+
+**Demo Mode**: Use `npm run demo` to run the app with pre-populated sample tasks and events. This is useful for testing UI with realistic data or demonstrating features. See [../demo/DEMO_MODE.md](../demo/DEMO_MODE.md) for more details.
 
 ### Project Layout
 

@@ -68,12 +68,29 @@ The current implementation focuses on planning and workload awareness with:
 	npm run dev
 	```
 
+	Or, to run with sample seed data for demonstration:
+
+	```bash
+	npm run demo
+	```
+
 3. Open the local URL shown in the terminal.
+
+### Demo Mode
+
+PlanAware supports two data modes:
+
+- **Default** (`npm run dev`): Starts with an empty task and event list, allowing you to add your own data.
+- **Demo** (`npm run demo`): Starts with pre-populated sample tasks and events, useful for exploring features and UI.
+
+See [docs/demo/DEMO_MODE.md](./docs/demo/DEMO_MODE.md) for more details about using the demo mode.
 
 ## Available Scripts
 
-- `npm run dev` - Start Vite dev server
-- `npm run build` - Build production assets
+- `npm run dev` - Start Vite dev server (empty data)
+- `npm run demo` - Start dev server with sample seed data
+- `npm run build` - Build production assets (empty data)
+- `npm run build:demo` - Build production assets with sample seed data
 - `npm run preview` - Preview production build locally
 - `npm run deploy` - Build and publish `dist` to the `gh-pages` branch
 

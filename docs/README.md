@@ -10,6 +10,7 @@ Your starting point for setup and day-to-day development.
 **Contains**:
 - [QUICK_REFERENCE.md](./guides/QUICK_REFERENCE.md) ⭐ - Quick command lookup and state overview
 - [DEVELOPER_GUIDE.md](./guides/DEVELOPER_GUIDE.md) - Installation, setup, and development workflow
+- [ENV_CONFIGURATION.md](./guides/ENV_CONFIGURATION.md) - Environment variables configuration
 
 ---
 
@@ -28,24 +29,19 @@ System design and technical specifications.
 **Contains**:
 - [ARCHITECTURE.md](./design/ARCHITECTURE.md) - System design and component structure
 - [DATA_MODEL.md](./design/DATA_MODEL.md) - Data structures and specifications
+- [PHONE_SIMULATION_ARCHITECTURE.md](./design/PHONE_SIMULATION_ARCHITECTURE.md) - Phone UI separation design
+- [ARCHITECTURE_IMPLEMENTATION.md](./design/ARCHITECTURE_IMPLEMENTATION.md) - Complete implementation guide
+- [PHONE_SIMULATION_IMPLEMENTATION.md](./design/PHONE_SIMULATION_IMPLEMENTATION.md) - Technical implementation details
 - [README.md](./design/README.md) - Design directory index
 
 ---
 
-### ✨ [features/](./features/) - Feature Descriptions
-What PlanAware can do and how to use it.
-
-**Contains**:
-- [FEATURES.md](./features/FEATURES.md) - Feature descriptions and use cases
-- [README.md](./features/README.md) - Features directory index
-
----
-
-### 🔧 [reference/](./reference/) - Troubleshooting & Support
+### 🔌 [reference/](./reference/) - Troubleshooting & Support
 Solutions for problems and debugging guidance.
 
 **Contains**:
 - [TROUBLESHOOTING.md](./reference/TROUBLESHOOTING.md) - Common issues and solutions
+- [TESTING_GUIDE.html](./reference/TESTING_GUIDE.html) - Interactive browser testing guide
 - [README.md](./reference/README.md) - Reference directory index
 
 ---
@@ -61,6 +57,9 @@ Solutions for problems and debugging guidance.
 | **Run with demo data** | [demo/DEMO_MODE.md](./demo/DEMO_MODE.md) |
 | **Understand the system** | [design/ARCHITECTURE.md](./design/ARCHITECTURE.md) |
 | **Learn data structures** | [design/DATA_MODEL.md](./design/DATA_MODEL.md) |
+| **Understand phone UI architecture** | [design/PHONE_SIMULATION_ARCHITECTURE.md](./design/PHONE_SIMULATION_ARCHITECTURE.md) |
+| **Set environment variables** | [guides/ENV_CONFIGURATION.md](./guides/ENV_CONFIGURATION.md) |
+| **Test the phone simulation** | [reference/TESTING_GUIDE.html](./reference/TESTING_GUIDE.html) |
 | **Explore features** | [features/FEATURES.md](./features/FEATURES.md) |
 | **Fix a problem** | [reference/TROUBLESHOOTING.md](./reference/TROUBLESHOOTING.md) |
 

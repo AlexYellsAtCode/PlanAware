@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { seedTasks as importedSeedTasks, seedEvents as importedSeedEvents } from './seedData.js'
+import { isMobileEnvironment } from './utils/deviceDetection.js'
+import { PhoneFrameWrapper } from './components/PhoneFrameWrapper.jsx'
+import { StatusBar } from './components/StatusBar.jsx'
 
 function shortPriority(priority) {
   if (String(priority).toLowerCase() === 'medium') return 'Med'
@@ -523,6 +526,7 @@ function occursOnDate(item, anchorDate, targetDate) {
 }
 
 function App() {
+  const [isMobileMode, setIsMobileMode] = useState(() => isMobileEnvironment())
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()))
   const [currentTime, setCurrentTime] = useState(() => new Date())
 
@@ -688,6 +692,15 @@ function App() {
     return () => {
       active = false
     }
+  }, [])
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobileMode(isMobileEnvironment())
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   useEffect(() => {
@@ -1290,26 +1303,8 @@ function App() {
   }
 
   return (
-    <main className="page-shell">
-      <div className="phone-frame">
-        <header className="status-bar">
-          <span>{toClockLabel(currentTime)}</span>
-          <div className="status-icons" aria-hidden="true">
-            <span className="cell-icon">
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="battery-wrap">
-              <span className="battery-icon" />
-              <span className="battery-text">100%</span>
-            </span>
-          </div>
-        </header>
-
-        <section className="app-card">
-          <div className="screen-shell">
+    <PhoneFrameWrapper currentTime={currentTime} isMobileMode={isMobileMode}>
+      <div className="screen-shell">
               <div className="hero">
               <div className="hero-row">
                 <div className="date-pill">
@@ -2253,9 +2248,7 @@ function App() {
               </span>
             </button>
           </nav>
-        </section>
-      </div>
-    </main>
+    </PhoneFrameWrapper>
   )
 }
 

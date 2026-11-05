@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "demo": "cross-env VITE_USE_SEED_DATA=true vite",
+    "dev:demo": "cross-env VITE_USE_SEED_DATA=true vite --config vite.config.js --mode demo",
     "build": "vite build",
-    "build:demo": "cross-env VITE_USE_SEED_DATA=true vite build",
+    "build:demo": "cross-env VITE_USE_SEED_DATA=true vite build --config vite.config.js --mode demo",
     "preview": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist --no-history --nojekyll --remove \"*\""

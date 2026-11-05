@@ -15,26 +15,33 @@ npm run dev
 ## Common Commands
 
 ```bash
-npm run dev        # Start development server with empty data
-npm run demo       # Start development server with sample seed data
-npm run build      # Build for production with empty data
-npm run build:demo # Build production version with sample seed data
+npm run dev        # Start development server (main app, no phone simulation)
+npm run dev:demo   # Start development server with phone simulation and sample data
+npm run build      # Build for production (both main and demo versions)
+npm run build:demo # Build demo version with phone simulation and sample seed data
 npm run preview    # Preview production build locally
 npm run deploy     # Build and deploy to GitHub Pages
 ```
 
-**Tip**: Use `npm run demo` to explore the app with sample tasks and events pre-loaded. See [../demo/DEMO_MODE.md](../demo/DEMO_MODE.md) for details.
+**Main App** (`npm run dev`): Lightweight version without the phone frame wrapper. Best for mobile testing and core development.
+
+**Demo App** (`npm run dev:demo`): Includes a phone frame mockup for desktop viewing, phone status bar, and pre-loaded sample data. Useful for showcasing features and testing UI on desktop. See [../demo/DEMO_MODE.md](../demo/DEMO_MODE.md) for details.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/App.jsx` | Main component (state, views, fake backend) |
-| `src/main.jsx` | React entry point |
+| `src/App.jsx` | Main component (state, views, fake backend); no phone UI code |
+| `src/main.jsx` | Main entry point (renders App directly) |
+| `src/main-demo.jsx` | Demo entry point (wraps App with phone frame) |
+| `src/components/PhoneFrameWrapper.jsx` | Phone mockup UI (demo only) |
+| `src/components/StatusBar.jsx` | Phone status bar (demo only) |
+| `src/utils/deviceDetection.js` | Mobile detection (demo only) |
 | `src/styles.css` | All styling |
-| `index.html` | HTML template |
+| `index.html` | Main app HTML entry |
+| `index-demo.html` | Demo app HTML entry |
+| `vite.config.js` | Multi-entry-point build configuration |
 | `package.json` | Dependencies and scripts |
-| `vite.config.js` | Vite configuration |
 
 ## State Variables in App.jsx
 

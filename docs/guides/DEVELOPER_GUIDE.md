@@ -33,30 +33,66 @@ npm run dev
 ### Available Scripts
 
 ```bash
-npm run dev       # Start Vite dev server with hot module replacement (empty data)
-npm run demo      # Start dev server with sample seed data loaded
-npm run build     # Create production build in dist/ (empty data)
-npm run build:demo # Create production build with sample seed data
-npm run preview   # Serve the production build locally
-npm run deploy    # Build and deploy to GitHub Pages (gh-pages branch)
+npm run dev        # Start dev server (main app, no phone simulation, empty data)
+npm run dev:demo   # Start dev server with phone simulation frame and sample seed data
+npm run build      # Create production builds (both main and demo versions)
+npm run build:demo # Create production build with phone simulation and sample seed data
+npm run preview    # Serve the production build locally
+npm run deploy     # Build and deploy to GitHub Pages (gh-pages branch)
 ```
 
-**Demo Mode**: Use `npm run demo` to run the app with pre-populated sample tasks and events. This is useful for testing UI with realistic data or demonstrating features. See [../demo/DEMO_MODE.md](../demo/DEMO_MODE.md) for more details.
+**Main App** (`npm run dev`): Lightweight version without phone simulation wrapper. Best for actual mobile device testing and core development.
+
+**Demo App** (`npm run dev:demo`): Includes phone frame simulation for desktop viewing and pre-populated sample tasks and events. Useful for showcasing features and testing the UI on desktop. See [../demo/DEMO_MODE.md](../demo/DEMO_MODE.md) for more details.
 
 ### Project Layout
 
 ```
 src/
-├── App.jsx       # Main application component (~800+ lines)
-│                 # Contains:
-│                 # - State management (tasks, events, UI state)
-│                 # - Fake backend implementation
-│                 # - All view components (home, weekly, monthly)
-│                 # - Event handlers and calculations
+├── App.jsx              # Main application component (~2200+ lines)
+│                        # Contains:
+│                        # - State management (tasks, events, UI state)
+│                        # - Fake backend implementation
+│                        # - All view components (home, weekly, monthly)
+│                        # - Event handlers and calculations
+│                        # - No phone simulation UI code
 │
-├── main.jsx      # React DOM mount point
-└── styles.css    # Single stylesheet for entire application
+├── main.jsx             # Main app entry point (renders App directly)
+├── main-demo.jsx        # Demo app entry point (wraps App with phone frame)
+│
+├── components/
+│   ├── PhoneFrameWrapper.jsx  # Phone mockup frame (only in demo build)
+│   └── StatusBar.jsx          # Phone status bar (only in demo build)
+│
+├── utils/
+│   └── deviceDetection.js     # Mobile device detection (only in demo build)
+│
+├── seedData.js          # Sample tasks and events for demo
+├── styles.css           # Single stylesheet for entire application
+└── testing/             # Testing utilities
+    └── deviceDetectionTest.js
+
+Root/
+├── index.html           # Main app entry HTML
+├── index-demo.html      # Demo app entry HTML
+└── vite.config.js       # Multi-entry-point build configuration
 ```
+
+### Entry Points
+
+#### Main App (`index.html` → `src/main.jsx`)
+- Lightweight entry point
+- Renders App component directly
+- No phone simulation wrapper
+- ~0.19 KB bundle size
+- Best for: production, mobile testing, core development
+
+#### Demo App (`index-demo.html` → `src/main-demo.jsx`)
+- Wraps App with `PhoneFrameWrapper`
+- Includes device detection and phone status bar
+- Loads seed data automatically
+- ~1.61 KB bundle size
+- Best for: desktop preview, demos, showcasing features
 
 ### Key Concepts to Understand
 

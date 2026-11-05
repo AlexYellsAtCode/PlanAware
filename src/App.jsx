@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { seedTasks as importedSeedTasks, seedEvents as importedSeedEvents } from './seedData.js'
-import { isMobileEnvironment } from './utils/deviceDetection.js'
-import { PhoneFrameWrapper } from './components/PhoneFrameWrapper.jsx'
-import { StatusBar } from './components/StatusBar.jsx'
 
 function shortPriority(priority) {
   if (String(priority).toLowerCase() === 'medium') return 'Med'
@@ -526,7 +523,6 @@ function occursOnDate(item, anchorDate, targetDate) {
 }
 
 function App() {
-  const [isMobileMode, setIsMobileMode] = useState(() => isMobileEnvironment())
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()))
   const [currentTime, setCurrentTime] = useState(() => new Date())
 
@@ -692,15 +688,6 @@ function App() {
     return () => {
       active = false
     }
-  }, [])
-
-  useEffect(() => {
-    function handleResize() {
-      setIsMobileMode(isMobileEnvironment())
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   useEffect(() => {
@@ -1303,8 +1290,7 @@ function App() {
   }
 
   return (
-    <PhoneFrameWrapper currentTime={currentTime} isMobileMode={isMobileMode}>
-      <div className="screen-shell">
+    <div className="screen-shell">
               <div className="hero">
               <div className="hero-row">
                 <div className="date-pill">
@@ -1727,8 +1713,6 @@ function App() {
             </section>
           )}
 
-          </div>
-          
           {deleteConfirmOpen && (
             <div className="delete-modal-backdrop" onClick={handleCancelDelete}>
               <div
@@ -2248,7 +2232,7 @@ function App() {
               </span>
             </button>
           </nav>
-    </PhoneFrameWrapper>
+    </div>
   )
 }
 
